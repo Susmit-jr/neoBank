@@ -13,7 +13,9 @@ import { formatDate } from "../../utils/dates";
 
 import {
   useEffect,
+  useRef,
   useState,
+  type ReactNode,
   type SubmitEvent,
 } from "react";
 import { useParams } from "react-router-dom";
@@ -371,249 +373,202 @@ useEffect(() => {
   }
 }
 
-  if (step === "LOADING") {
-    return (
-      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
-        <div className="text-center">
-          <LoaderCircle
-            className="mx-auto animate-spin text-slate-700"
-          />
+  const frameRef = useRef<HTMLElement>(null);
 
-          <p className="mt-4 text-sm font-medium text-slate-600">
-            Loading bank authorisation...
-          </p>
-        </div>
+  // Tell the page that hosts this window how tall the content is, so it never scrolls.
+  useEffect(() => {
+    const element = frameRef.current;
+
+    if (!isEmbedded || !element) {
+      return;
+    }
+
+    const report = () =>
+      window.parent.postMessage(
+        {
+          source: "NEOBANK_BANK_AUTHORISATION",
+          type: "RESIZE",
+          height: Math.ceil(element.getBoundingClientRect().height),
+        },
+        window.location.origin,
+      );
+
+    const observer = new ResizeObserver(report);
+    observer.observe(element);
+    report();
+
+    return () => observer.disconnect();
+  });
+
+  const timer =
+    secondsRemaining !== null &&
+    ["LOGIN", "OTP", "REVIEW"].includes(step) ? (
+      <p
+        className={`text-xs font-semibold ${secondsRemaining <= 60 ? "text-[var(--brand-primary)]" : "text-slate-500"}`}
+      >
+        Session expires in{" "}
+        <span className="text-sm">
+          {String(Math.floor(secondsRemaining / 60)).padStart(2, "0")}:
+          {String(secondsRemaining % 60).padStart(2, "0")}
+        </span>
+      </p>
+    ) : null;
+
+  function frame(body: ReactNode) {
+    return (
+      <main
+        ref={frameRef}
+        data-portal="BANK_ADMIN"
+        className={
+          isEmbedded
+            ? "bg-white"
+            : "flex min-h-screen items-start justify-center bg-[var(--app-canvas)] p-6"
+        }
+      >
+        <section
+          className={
+            isEmbedded
+              ? "bg-white"
+              : "w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
+          }
+        >
+          <header className="flex items-center gap-4 border-b-4 border-[var(--brand-primary)] bg-white px-8 py-4 pr-16">
+            <IndusIndLogo />
+            <span className="h-6 w-px bg-slate-200" aria-hidden="true" />
+            <h1 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Corporate Authorisation
+            </h1>
+            <div className="ml-auto">{timer}</div>
+          </header>
+
+          <div className="px-8 py-7">{body}</div>
+        </section>
       </main>
+    );
+  }
+
+  const errorBox = error ? (
+    <div
+      role="alert"
+      className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+    >
+      {error}
+    </div>
+  ) : null;
+
+  function notice(
+    icon: ReactNode,
+    tone: string,
+    title: string,
+    text: ReactNode,
+    action?: ReactNode,
+  ) {
+    return frame(
+      <div className="mx-auto max-w-md py-4 text-center">
+        <div
+          className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ${tone}`}
+        >
+          {icon}
+        </div>
+        <h2 className="mt-5 text-xl font-bold text-slate-950">{title}</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">{text}</p>
+        {action}
+      </div>,
+    );
+  }
+
+  const primaryButton =
+    "flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-strong)] disabled:opacity-60";
+
+  if (step === "LOADING") {
+    return frame(
+      <div className="py-10 text-center">
+        <LoaderCircle className="mx-auto animate-spin text-[var(--brand-primary)]" />
+        <p className="mt-4 text-sm font-medium text-slate-600">
+          Loading bank authorisation...
+        </p>
+      </div>,
     );
   }
 
   if (step === "EXPIRED") {
-    return (
-      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
-        <section className="w-full max-w-md rounded-3xl border border-amber-200 bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
-            <Clock3 size={27} />
-          </div>
-
-          <h1 className="mt-5 text-xl font-bold text-slate-950">
-            Session expired
-          </h1>
-
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            For your security, a bank authorisation window stays
-            open for 10 minutes. Nothing has been authorised. Return
-            to NeoBank and select Authorise to start again.
-          </p>
-
-          <button
-            type="button"
-            onClick={closeOrReturn}
-            className="mt-7 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white"
-          >
-            Return to NeoBank
-          </button>
-        </section>
-      </main>
+    return notice(
+      <Clock3 size={27} />,
+      "bg-amber-50 text-amber-700",
+      "Session expired",
+      "For your security, a bank authorisation window stays open for 10 minutes. Nothing has been authorised. Return to NeoBank and select Authorise to start again.",
+      <button
+        type="button"
+        onClick={closeOrReturn}
+        className={`${primaryButton} mt-7`}
+      >
+        Return to NeoBank
+      </button>,
     );
   }
 
   if (step === "ERROR" || !details) {
-    return (
-      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
-        <section className="w-full max-w-md rounded-3xl border border-red-200 bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-700">
-            <LockKeyhole size={27} />
-          </div>
-
-          <h1 className="mt-5 text-xl font-bold text-slate-950">
-            Authorisation unavailable
-          </h1>
-
-          <p className="mt-3 text-sm leading-6 text-red-700">
-            {error}
-          </p>
-          
-          <button
-            
-            type="button"
-            onClick={closeOrReturn}
-            className="mt-7 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white"
-          >
-            Return to NeoBank
-          </button>
-        </section>
-      </main>
+    return notice(
+      <LockKeyhole size={27} />,
+      "bg-red-50 text-red-700",
+      "Authorisation unavailable",
+      <span className="text-red-700">{error}</span>,
+      <button
+        type="button"
+        onClick={closeOrReturn}
+        className={`${primaryButton} mt-7`}
+      >
+        Return to NeoBank
+      </button>,
     );
   }
 
   if (step === "SUCCESS") {
-    return (
-      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
-        <section className="w-full max-w-md rounded-3xl border border-emerald-200 bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
-            <CheckCircle2 size={32} />
-          </div>
-
-          <h1 className="mt-6 text-2xl font-bold text-slate-950">
-            Authorisation completed
-          </h1>
-
-          <p className="mt-4 text-sm leading-6 text-slate-600">
-            {successMessage}
-          </p>
-
-          <p className="mt-6 text-sm text-slate-500">
-            Returning to NeoBank in {Math.max(secondsLeft, 0)} second
-            {secondsLeft === 1 ? "" : "s"}…
-          </p>
-
-          <button
-            type="button"
-            onClick={closeOrReturn}
-            className="mt-4 rounded-xl bg-[var(--brand-primary)] px-6 py-3 text-sm font-semibold text-white"
-          >
-            Return to NeoBank now
-          </button>
-        </section>
-      </main>
+    return notice(
+      <CheckCircle2 size={30} />,
+      "bg-emerald-50 text-emerald-700",
+      "Authorisation completed",
+      <>
+        {successMessage}
+        <span className="mt-5 block text-slate-500">
+          Returning to NeoBank in {Math.max(secondsLeft, 0)} second
+          {secondsLeft === 1 ? "" : "s"}…
+        </span>
+      </>,
+      <button
+        type="button"
+        onClick={closeOrReturn}
+        className={`${primaryButton} mt-5`}
+      >
+        Return to NeoBank now
+      </button>,
     );
   }
 
-  return (
-    <main
-      data-portal="BANK_ADMIN"
-      className={
-        isEmbedded
-          ? "min-h-screen bg-white"
-          : "min-h-screen bg-slate-100 p-5 sm:p-8"
-      }
-    >
-      <section
-        className={
-          isEmbedded
-            ? "overflow-hidden bg-white"
-            : "mx-auto max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
-        }
-      >
-        <header className="border-b-4 border-[var(--brand-primary)] bg-white px-6 py-5 pr-14">
-          <div className="flex items-center justify-between gap-3">
-            <IndusIndLogo />
+  const demoBox = (children: ReactNode) => (
+    <div className="mt-6 rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-4 text-xs leading-5 text-[var(--text-primary)]">
+      {children}
+    </div>
+  );
 
-            {secondsRemaining !== null && (
-              <p
-                className={`text-right text-xs font-semibold ${secondsRemaining <= 60 ? "text-[var(--brand-primary)]" : "text-slate-500"}`}
-              >
-                Session expires in
-                <span className="block text-sm">
-                  {String(Math.floor(secondsRemaining / 60)).padStart(2, "0")}
-                  :{String(secondsRemaining % 60).padStart(2, "0")}
-                </span>
-              </p>
-            )}
+  if (step === "LOGIN") {
+    return frame(
+      <div className="grid gap-10 md:grid-cols-2">
+        <div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand-primary)]">
+            <ShieldCheck size={24} />
           </div>
+          <h2 className="mt-5 text-xl font-bold text-slate-950">
+            Authenticate with the bank
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Enter your bank corporate net banking credentials to
+            continue.
+          </p>
 
-          <h1 className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Corporate Authorisation
-          </h1>
-        </header>
-
-        {step === "LOGIN" && (
-          <form
-            onSubmit={handleLogin}
-            className="space-y-5 p-6 sm:p-8"
-          >
-            <div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand-primary)]">
-                <ShieldCheck size={24} />
-              </div>
-
-              <h2 className="mt-5 text-xl font-bold text-slate-950">
-                Authenticate with the bank
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Enter your bank corporate net banking
-                credentials to continue.
-              </p>
-            </div>
-
-            {error && (
-              <div
-                role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-              >
-                {error}
-              </div>
-            )}
-
-            <BankInput
-              label="Corporate ID"
-              value={corporateId}
-              onChange={setCorporateId}
-              placeholder="Enter Corporate ID"
-            />
-
-            <BankInput
-              label="Bank User ID"
-              value={bankUserId}
-              onChange={setBankUserId}
-              placeholder="Enter Bank User ID"
-            />
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">
-                Password
-              </span>
-
-              <div className="relative">
-                <input
-                  type={
-                    showPassword ? "text" : "password"
-                  }
-                  required
-                  value={password}
-                  onChange={(event) =>
-                    setPassword(event.target.value)
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 text-sm outline-none focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--focus-ring)]"
-                  placeholder="Enter bank password"
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowPassword(
-                      (current) => !current,
-                    )
-                  }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-500 hover:bg-slate-100"
-                >
-                  {showPassword ? (
-                    <EyeOff size={18} />
-                  ) : (
-                    <Eye size={18} />
-                  )}
-                </button>
-              </div>
-            </label>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-strong)] disabled:opacity-60"
-            >
-              {isSubmitting && (
-                <LoaderCircle
-                  size={18}
-                  className="animate-spin"
-                />
-              )}
-
-              Authenticate
-            </button>
-
-            {demoBankUser && (
-              <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-4 text-xs leading-5 text-[var(--text-primary)]">
+          {demoBankUser &&
+            demoBox(
+              <>
                 <p className="font-semibold uppercase tracking-wide">
                   Demo credentials for {demoBankUser.fullName}
                 </p>
@@ -624,8 +579,7 @@ useEffect(() => {
                   Bank User ID:{" "}
                   <strong>{demoBankUser.bankUserId}</strong>
                   <br />
-                  Password:{" "}
-                  <strong>{demoBankUser.password}</strong>
+                  Password: <strong>{demoBankUser.password}</strong>
                 </p>
                 <button
                   type="button"
@@ -639,271 +593,204 @@ useEffect(() => {
                 >
                   Use these credentials
                 </button>
-              </div>
+              </>,
             )}
-          </form>
-        )}
+        </div>
 
-        {step === "OTP" && (
-          <form
-            onSubmit={handleOtp}
-            className="space-y-5 p-6 sm:p-8"
+        <form onSubmit={handleLogin} className="space-y-4">
+          {errorBox}
+
+          <BankInput
+            label="Corporate ID"
+            value={corporateId}
+            onChange={setCorporateId}
+            placeholder="Enter Corporate ID"
+          />
+
+          <BankInput
+            label="Bank User ID"
+            value={bankUserId}
+            onChange={setBankUserId}
+            placeholder="Enter Bank User ID"
+          />
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-semibold text-slate-700">
+              Password
+            </span>
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 text-sm outline-none focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--focus-ring)]"
+                placeholder="Enter bank password"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-500 hover:bg-slate-100"
+                aria-label={
+                  showPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </label>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={primaryButton}
           >
-            <div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand-primary)]">
-                <LockKeyhole size={24} />
-              </div>
-
-              <h2 className="mt-5 text-xl font-bold text-slate-950">
-                Verify with OTP
-              </h2>
-
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                A 6-digit one-time password has been
-                sent to your registered mobile number.
-              </p>
-            </div>
-
-            {error && (
-              <div
-                role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-              >
-                {error}
-              </div>
+            {isSubmitting && (
+              <LoaderCircle size={18} className="animate-spin" />
             )}
+            Authenticate
+          </button>
+        </form>
+      </div>,
+    );
+  }
 
-            <BankInput
-              label="One-time password"
-              value={otp}
-              onChange={setOtp}
-              placeholder="Enter 6-digit OTP"
-            />
-
-            <button
-              type="submit"
-              disabled={isSubmitting || otp.length < 6}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-strong)] disabled:opacity-60"
-            >
-              {isSubmitting && (
-                <LoaderCircle
-                  size={18}
-                  className="animate-spin"
-                />
-              )}
-
-              Verify and continue
-            </button>
-
-            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-4 text-xs leading-5 text-[var(--text-primary)]">
-              Demo OTP: <strong>123456</strong>
-            </div>
-          </form>
-        )}
-
-        {step === "REVIEW" && (
-          <div className="p-6 sm:p-8">
-
-                <h2 className="text-xl font-bold text-slate-950">
-  {details.requestType === "PAYMENT"
-    ? "Verify payment details"
-    : "Verify beneficiary details"}
-</h2>
-
-            <p className="mt-2 text-sm text-slate-600">
-              {details.requestType === "PAYMENT"
-                ? "Review the payment before authorising."
-                : "Review the beneficiary before authorising."}
-            </p>
-
-            {error && (
-              <div
-                role="alert"
-                className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-              >
-                {error}
-              </div>
-            )}
-
-              <div className="mt-6 grid gap-5 rounded-2xl bg-slate-50 p-5 sm:grid-cols-2">
-  {details.requestType ===
-  "BENEFICIARY_CREATION" ? (
-    <>
-      <ReviewItem
-        label="Beneficiary name"
-        value={
-          details.beneficiary
-            .beneficiaryName
-        }
-      />
-
-      <ReviewItem
-        label="Request reference"
-        value={
-          details.beneficiary
-            .beneficiaryReference
-        }
-      />
-
-      <ReviewItem
-        label="Account number"
-        value={
-          details.beneficiary
-            .maskedAccountNumber
-        }
-      />
-
-      <ReviewItem
-        label="Account type"
-        value={
-          details.beneficiary.accountType.replaceAll(
-            "_",
-            " ",
-          )
-        }
-      />
-
-      <ReviewItem
-        label="Bank"
-        value={
-          details.beneficiary.bankName
-        }
-      />
-
-      <ReviewItem
-        label="IFSC"
-        value={
-          details.beneficiary.ifscCode
-        }
-      />
-    </>
-  ) : (
-    <>
-      <ReviewItem
-        label="Payment reference"
-        value={
-          details.payment.paymentReference
-        }
-      />
-
-      <ReviewItem
-        label="Payment amount"
-        value={formatCurrency(
-          details.payment.amount,
-        )}
-      />
-
-      <ReviewItem
-        label="Debit account"
-        value={
-          details.payment
-            .maskedDebitAccountNumber
-        }
-      />
-
-      <ReviewItem
-        label="Beneficiary"
-        value={
-          details.payment.beneficiaryName
-        }
-      />
-
-      <ReviewItem
-        label="Beneficiary account"
-        value={
-          details.payment
-            .maskedBeneficiaryAccountNumber
-        }
-      />
-
-      <ReviewItem
-        label="Beneficiary bank"
-        value={
-          details.payment
-            .beneficiaryBankName
-        }
-      />
-
-      <ReviewItem
-        label="IFSC"
-        value={
-          details.payment
-            .beneficiaryIfscCode
-        }
-      />
-
-      <ReviewItem
-        label="Payment mode"
-        value={details.payment.paymentMode}
-      />
-
-      <ReviewItem
-        label="Payment purpose"
-        value={
-          details.payment.paymentPurpose
-        }
-      />
-
-      <ReviewItem
-        label="Scheduled date"
-        value={
-          formatDate(details.payment.scheduledDate)
-        }
-      />
-    </>
-  )}
-
-  <ReviewItem
-    label="Current approval step"
-    value={`${details.approvalStage.stageName} - Stage ${details.approvalStage.stageSequence}`}
-  />
-
-  <ReviewItem
-    label="Required approvals"
-    value={String(
-      details.approvalStage
-        .requiredApprovals,
-    )}
-  />
-</div>
-
-            <AuthorisersPanel
-              authorisers={details.authorisers}
-              required={
-                details.approvalStage.requiredApprovals
-              }
-            />
-
-            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
-              By selecting Authorise, you confirm that the
-              displayed {details.requestType === "PAYMENT" ? "payment" : "beneficiary"} details are correct.
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void handleAuthorise()}
-              disabled={isSubmitting}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <LoaderCircle
-                  size={18}
-                  className="animate-spin"
-                />
-              ) : (
-                <CheckCircle2 size={18} />
-              )}
-
-                {isSubmitting
-  ? "Authorising..."
-  : details.requestType === "PAYMENT"
-    ? "Authorise transaction"
-    : "Authorise beneficiary"}
-            </button>
+  if (step === "OTP") {
+    return frame(
+      <div className="grid gap-10 md:grid-cols-2">
+        <div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand-primary)]">
+            <LockKeyhole size={24} />
           </div>
-        )}
-      </section>
-    </main>
+          <h2 className="mt-5 text-xl font-bold text-slate-950">
+            Verify with OTP
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            A 6-digit one-time password has been sent to your registered
+            mobile number.
+          </p>
+
+          {demoBox(
+            <>
+              Demo OTP: <strong>123456</strong>
+            </>,
+          )}
+        </div>
+
+        <form onSubmit={handleOtp} className="space-y-4">
+          {errorBox}
+
+          <BankInput
+            label="One-time password"
+            value={otp}
+            onChange={setOtp}
+            placeholder="Enter 6-digit OTP"
+          />
+
+          <button
+            type="submit"
+            disabled={isSubmitting || otp.length < 6}
+            className={primaryButton}
+          >
+            {isSubmitting && (
+              <LoaderCircle size={18} className="animate-spin" />
+            )}
+            Verify and continue
+          </button>
+        </form>
+      </div>,
+    );
+  }
+
+  const isPayment = details.requestType === "PAYMENT";
+
+  const items: [string, string][] =
+    details.requestType === "BENEFICIARY_CREATION"
+      ? [
+          ["Beneficiary name", details.beneficiary.beneficiaryName],
+          ["Request reference", details.beneficiary.beneficiaryReference],
+          ["Account number", details.beneficiary.maskedAccountNumber],
+          [
+            "Account type",
+            details.beneficiary.accountType.replaceAll("_", " "),
+          ],
+          ["Bank", details.beneficiary.bankName],
+          ["IFSC", details.beneficiary.ifscCode],
+        ]
+      : [
+          ["Payment reference", details.payment.paymentReference],
+          ["Payment amount", formatCurrency(details.payment.amount)],
+          ["Debit account", details.payment.maskedDebitAccountNumber],
+          ["Beneficiary", details.payment.beneficiaryName],
+          [
+            "Beneficiary account",
+            details.payment.maskedBeneficiaryAccountNumber,
+          ],
+          ["Beneficiary bank", details.payment.beneficiaryBankName],
+          ["IFSC", details.payment.beneficiaryIfscCode],
+          ["Payment mode", details.payment.paymentMode],
+          ["Payment purpose", details.payment.paymentPurpose],
+          ["Scheduled date", formatDate(details.payment.scheduledDate)],
+        ];
+
+  return frame(
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="text-xl font-bold text-slate-950">
+            {isPayment
+              ? "Verify payment details"
+              : "Verify beneficiary details"}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Review the {isPayment ? "payment" : "beneficiary"} before
+            authorising.
+          </p>
+        </div>
+      </div>
+
+      {error && <div className="mt-4">{errorBox}</div>}
+
+      <div className="mt-5 grid gap-x-6 gap-y-4 rounded-2xl bg-slate-50 p-5 grid-cols-2 sm:grid-cols-4">
+        {items.map(([label, value]) => (
+          <ReviewItem key={label} label={label} value={value} />
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-5 md:grid-cols-2">
+        <AuthorisersPanel
+          authorisers={details.authorisers}
+          required={details.approvalStage.requiredApprovals}
+        />
+
+        <div className="flex flex-col justify-between gap-4">
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
+            By selecting Authorise, you confirm that the displayed{" "}
+            {isPayment ? "payment" : "beneficiary"} details are correct.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => void handleAuthorise()}
+            disabled={isSubmitting}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <LoaderCircle size={18} className="animate-spin" />
+            ) : (
+              <CheckCircle2 size={18} />
+            )}
+            {isSubmitting
+              ? "Authorising..."
+              : isPayment
+                ? "Authorise transaction"
+                : "Authorise beneficiary"}
+          </button>
+        </div>
+      </div>
+    </div>,
   );
 }
 
@@ -926,7 +813,7 @@ function AuthorisersPanel({
   );
 
   return (
-    <div className="mt-6 rounded-2xl border border-slate-200 p-5">
+    <div className="rounded-2xl border border-slate-200 p-4">
       <p className="text-sm font-semibold text-slate-950">
         {remainingAfterYou === 0
           ? "Your authorisation completes this request."

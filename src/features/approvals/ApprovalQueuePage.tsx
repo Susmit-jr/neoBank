@@ -116,6 +116,9 @@ function ApprovalQueuePage() {
     string | null
   >(null);
 
+  // The bank window reports its content height so it never needs to scroll.
+  const [bankFrameHeight, setBankFrameHeight] = useState(520);
+
   // Re-evaluate unfinished bank sessions when the user comes back to this tab.
   const [, setFocusTick] = useState(0);
 
@@ -218,6 +221,14 @@ function ApprovalQueuePage() {
         event.data?.source !==
         "NEOBANK_BANK_AUTHORISATION"
       ) {
+        return;
+      }
+
+      if (
+        event.data?.type === "RESIZE" &&
+        typeof event.data.height === "number"
+      ) {
+        setBankFrameHeight(event.data.height);
         return;
       }
 
@@ -825,11 +836,17 @@ function ApprovalQueuePage() {
 
       {bankSessionId && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="relative h-[40rem] max-h-[94vh] w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+          <div className="relative w-full max-w-[56rem] overflow-hidden rounded-3xl bg-white shadow-2xl">
             <iframe
               title="IndusInd Bank authorisation"
               src={`/bank-authorisation/${bankSessionId}`}
-              className="h-full w-full border-0"
+              style={{
+                height: Math.min(
+                  bankFrameHeight,
+                  Math.round(window.innerHeight * 0.94),
+                ),
+              }}
+              className="block w-full border-0 transition-[height] duration-150"
             />
 
             <button

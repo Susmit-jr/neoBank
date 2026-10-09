@@ -29,21 +29,21 @@
 
 /* IndusInd Bank */
 [data-portal="BANK_ADMIN"] {
-  --app-canvas: #faf6f5;
-  --surface-muted: #f6efee;
-  --border-subtle: #eadfdc;
+  --app-canvas: #faf6f6;
+  --surface-muted: #f6efef;
+  --border-subtle: #ecdfe0;
   --text-primary: #2a1519;
   --text-secondary: #6d5b60;
   --text-muted: #8d7b80;
-  --brand-primary: #8a1538;
-  --brand-strong: #64102a;
-  --brand-soft: #fbeaf0;
+  --brand-primary: #9c3238;
+  --brand-strong: #7a2328;
+  --brand-soft: #f8ecec;
   --sidebar-mark: var(--brand-primary);
   --sidebar-active: var(--brand-soft);
   --sidebar-active-text: var(--brand-primary);
   --header-surface: rgba(255, 253, 252, 0.92);
-  --focus-ring: rgba(138, 21, 56, 0.2);
-  --selection: #f6dbe5;
+  --focus-ring: rgba(156, 50, 56, 0.2);
+  --selection: #f3dcdd;
 }
 
 * {
