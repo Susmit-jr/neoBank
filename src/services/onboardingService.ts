@@ -1075,6 +1075,9 @@ function generateCorporateId(): string {
   return `CORP${randomPart}`;
 }
 
+// Every newly opened account starts with this balance.
+const OPENING_BALANCE = 5000000;
+
 // A unique 10-digit customer identification number for the company.
 function generateCifId(): string {
   const taken = new Set(
@@ -1607,8 +1610,8 @@ storedApplication.proposedNeoBankUsers.forEach(
 
       ifscCode: "BANK0000123",
 
-      availableBalance: 0,
-      ledgerBalance: 0,
+      availableBalance: OPENING_BALANCE,
+      ledgerBalance: OPENING_BALANCE,
 
       status: "ACTIVE",
       isPrimary: true,
@@ -1616,6 +1619,20 @@ storedApplication.proposedNeoBankUsers.forEach(
 
     storedApplication.issuedCredentials =
       structuredClone(generatedCredentials);
+
+    updatedDatabase.transactions.push({
+      id: crypto.randomUUID(),
+      accountId: bankAccountId,
+      transactionReference: `OPEN${completionTime.slice(0, 10).replaceAll("-", "")}${Math.floor(1000 + Math.random() * 9000)}`,
+      transactionDate: completionTime,
+      valueDate: completionTime.slice(0, 10),
+      description: "Opening balance",
+      counterpartyName: "Account opening credit",
+      type: "CREDIT",
+      amount: OPENING_BALANCE,
+      closingBalance: OPENING_BALANCE,
+      status: "SUCCESSFUL",
+    });
 
     completedApplication =
       structuredClone(storedApplication);
