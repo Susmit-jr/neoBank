@@ -5,9 +5,6 @@ import {
 import { ProtectedRoute } from "./routeGuards";
 
 import PortalSelectionPage from "../features/authentication/PortalSelectionPage";
-import BankAdminLoginPage from "../features/authentication/BankAdminLoginPage";
-import PlatformAdminLoginPage from "../features/authentication/PlatformAdminLoginPage";
-import MerchantLoginPage from "../features/authentication/MerchantLoginPage";
 import UnauthorizedPage from "../features/authentication/UnauthorizedPage";
 
 import BankAdminDashboardPage from "../features/dashboard/BankAdminDashboardPage";
@@ -42,17 +39,17 @@ export const router = createBrowserRouter([
 
   {
     path: "/login/bank-admin",
-    element: <BankAdminLoginPage />,
+    element: <PortalSelectionPage openPortal="BANK_ADMIN" />,
   },
 
   {
     path: "/login/platform-admin",
-    element: <PlatformAdminLoginPage />,
+    element: <PortalSelectionPage openPortal="PLATFORM_ADMIN" />,
   },
 
   {
     path: "/login/merchant",
-    element: <MerchantLoginPage />,
+    element: <PortalSelectionPage openPortal="MERCHANT" />,
   },
 
   {

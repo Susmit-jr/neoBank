@@ -13,24 +13,26 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoginPanel from "./LoginPanel";
+import type { PortalType } from "../../types/auth";
 
 const loginOptions = [
   {
     title: "Business Banking",
     description: "Accounts, payments and approvals for your company",
-    route: "/login/merchant",
+    portal: "MERCHANT",
     icon: Store,
   },
   {
     title: "NeoBank Admin",
     description: "X Corp onboarding and platform operations",
-    route: "/login/platform-admin",
+    portal: "PLATFORM_ADMIN",
     icon: Building2,
   },
   {
     title: "Bank Admin",
     description: "IndusInd Bank operations and oversight",
-    route: "/login/bank-admin",
+    portal: "BANK_ADMIN",
     icon: Landmark,
   },
 ] as const;
@@ -62,9 +64,24 @@ const features = [
   },
 ] as const;
 
-function PortalSelectionPage() {
+function PortalSelectionPage({
+  openPortal = null,
+}: {
+  openPortal?: PortalType | null;
+}) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loginPortal, setLoginPortal] =
+    useState<PortalType | null>(openPortal);
+
+  useEffect(() => {
+    setLoginPortal(openPortal);
+  }, [openPortal]);
+
+  function closeLogin() {
+    setLoginPortal(null);
+    navigate("/", { replace: true });
+  }
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,7 +156,10 @@ function PortalSelectionPage() {
                       key={option.title}
                       type="button"
                       role="menuitem"
-                      onClick={() => navigate(option.route)}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setLoginPortal(option.portal);
+                      }}
                       className="flex w-full items-start gap-3 rounded-xl p-3 text-left transition hover:bg-slate-50"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
@@ -186,7 +206,7 @@ function PortalSelectionPage() {
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <button
                 type="button"
-                onClick={() => navigate("/login/merchant")}
+                onClick={() => setLoginPortal("MERCHANT")}
                 className="group flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800"
               >
                 Log in to Business Banking
@@ -367,7 +387,7 @@ function PortalSelectionPage() {
 
           <button
             type="button"
-            onClick={() => navigate("/login/merchant")}
+            onClick={() => setLoginPortal("MERCHANT")}
             className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
             Log in to Business Banking
@@ -381,6 +401,13 @@ function PortalSelectionPage() {
           <p>Privacy · Security · Support</p>
         </div>
       </footer>
+      {loginPortal && (
+        <LoginPanel
+          key={loginPortal}
+          portal={loginPortal}
+          onClose={closeLogin}
+        />
+      )}
     </main>
   );
 }

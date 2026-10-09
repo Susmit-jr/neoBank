@@ -23,6 +23,7 @@ import { portalThemes } from "../../design-system/portalTheme";
 import type {
   AuthenticatedUser,
   PortalType,
+  UserRole,
 } from "../../types/auth";
 
 type NavigationItem = {
@@ -30,6 +31,7 @@ type NavigationItem = {
   path?: string;
   icon: LucideIcon;
   disabled?: boolean;
+  roles?: UserRole[];
 };
 
 type SidebarProps = {
@@ -160,7 +162,13 @@ const navigationByPortal: Record<
     {
         label: "Approvals",
         path: "/merchant/approvals",
-        icon: ListChecks, 
+        icon: ListChecks,
+        roles: [
+          "CORPORATE_ADMIN",
+          "CHECKER",
+          "CHECKER_LEVEL_1",
+          "CHECKER_LEVEL_2",
+        ],
     },
     {
       label: "Reports",
@@ -189,7 +197,10 @@ function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const navigationItems = navigationByPortal[portal].filter(
-    (item) => !item.disabled && item.path,
+    (item) =>
+      !item.disabled &&
+      item.path &&
+      (!item.roles || item.roles.includes(user.role)),
   );
   const theme = portalThemes[portal];
 
