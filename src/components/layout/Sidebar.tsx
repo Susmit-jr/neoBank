@@ -60,6 +60,11 @@ const navigationByPortal: Record<
       icon: LayoutDashboard,
     },
     {
+      label: "Authorisations",
+      path: "/bank-admin/authorisations",
+      icon: ShieldCheck,
+    },
+    {
       label: "Organisations",
       icon: Building2,
       disabled: true,
@@ -72,11 +77,6 @@ const navigationByPortal: Record<
     {
       label: "MOP Management",
       icon: UserRoundCheck,
-      disabled: true,
-    },
-    {
-      label: "Authorisations",
-      icon: ShieldCheck,
       disabled: true,
     },
     {
@@ -124,8 +124,8 @@ const navigationByPortal: Record<
     },
     {
       label: "Audit Events",
+      path: "/platform-admin/audit",
       icon: FileClock,
-      disabled: true,
     },
     {
       label: "Settings",
@@ -169,6 +169,12 @@ const navigationByPortal: Record<
           "CHECKER_LEVEL_1",
           "CHECKER_LEVEL_2",
         ],
+    },
+    {
+      label: "Approval rules",
+      path: "/merchant/approval-rules",
+      icon: UserRoundCheck,
+      roles: ["CORPORATE_ADMIN"],
     },
     {
       label: "Reports",

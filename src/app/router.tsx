@@ -24,6 +24,9 @@ import CreateBeneficiaryPage from "../features/beneficiaries/CreateBeneficiaryPa
 
 import ApprovalQueuePage from "../features/approvals/ApprovalQueuePage";
 
+import MopPage from "../features/mop/MopPage";
+import AuditPage from "../features/audit/AuditPage";
+import BankAuthorisationsPage from "../features/authorisations/BankAuthorisationsPage";
 import PaymentsPage from "../features/payments/PaymentsPage";
 import CreatePaymentPage from "../features/payments/CreatePaymentPage";
 
@@ -80,6 +83,10 @@ export const router = createBrowserRouter([
         path: "onboarding",
         element: <BankAdminOnboardingPage />,
       },
+      {
+        path: "authorisations",
+        element: <BankAuthorisationsPage />,
+      },
     ],
   },
 
@@ -110,6 +117,10 @@ export const router = createBrowserRouter([
       {
         path: "onboarding",
         element: <NeoBankOnboardingQueuePage />,
+      },
+      {
+        path: "audit",
+        element: <AuditPage />,
       },
       {
         path: "onboarding/application/:applicationId",
@@ -192,6 +203,10 @@ export const router = createBrowserRouter([
             <CreatePaymentPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "approval-rules",
+        element: <MopPage />,
       },
       {
         path: "approvals",
