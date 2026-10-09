@@ -1,98 +1,149 @@
 import {
   Activity,
   Building2,
-  CircleCheckBig,
+  ClipboardList,
+  RefreshCw,
   Users,
 } from "lucide-react";
+import { useState } from "react";
+import { getDashboardSnapshot } from "../../services/dashboardService";
 import { useAuth } from "../../store/AuthContext";
-
-const metrics = [
-  {
-    label: "Merchant Organisations",
-    value: "36",
-    detail: "4 onboarding requests",
-    icon: Building2,
-    style: "bg-blue-50 text-blue-700",
-  },
-  {
-    label: "Platform Users",
-    value: "284",
-    detail: "267 active users",
-    icon: Users,
-    style: "bg-violet-50 text-violet-700",
-  },
-  {
-    label: "Integration Health",
-    value: "98.7%",
-    detail: "All critical services available",
-    icon: Activity,
-    style: "bg-emerald-50 text-emerald-700",
-  },
-  {
-    label: "Resolved Requests",
-    value: "42",
-    detail: "During the current cycle",
-    icon: CircleCheckBig,
-    style: "bg-amber-50 text-amber-700",
-  },
-];
+import {
+  EmptyRow,
+  MetricGrid,
+  Panel,
+  StatusPill,
+  TimeText,
+} from "./DashboardParts";
 
 function PlatformAdminDashboardPage() {
   const { user } = useAuth();
+  const [snapshot, setSnapshot] = useState(getDashboardSnapshot);
+
+  const maxStatusCount = Math.max(
+    1,
+    ...snapshot.paymentsByStatus.map((item) => item.count),
+  );
 
   return (
     <section className="mx-auto max-w-7xl">
-      <div className="mb-8">
-        <p className="text-sm font-medium text-slate-500">
-          Welcome back
-        </p>
+      <div className="mb-8 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-slate-500">
+            Welcome back
+          </p>
 
-        <h2 className="mt-1 text-2xl font-bold text-slate-950">
-          {user?.fullName}
-        </h2>
+          <h2 className="mt-1 text-2xl font-bold text-slate-950">
+            {user?.fullName}
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setSnapshot(getDashboardSnapshot())}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
+      <MetricGrid
+        metrics={[
+          {
+            label: "Businesses on X Corp",
+            value: String(snapshot.activeOrganisations),
+            detail: `${snapshot.organisationsThisMonth} onboarded this month`,
+            icon: Building2,
+            style: "bg-blue-50 text-blue-700",
+          },
+          {
+            label: "Business Banking users",
+            value: String(snapshot.activeBusinessUsers),
+            detail: "Active makers, checkers and admins",
+            icon: Users,
+            style: "bg-violet-50 text-violet-700",
+          },
+          {
+            label: "Payment success rate",
+            value:
+              snapshot.successRate === null
+                ? "N/A"
+                : `${snapshot.successRate}%`,
+            detail: `${snapshot.successfulPayments} settled, ${snapshot.failedPayments} failed or rejected`,
+            icon: Activity,
+            style: "bg-emerald-50 text-emerald-700",
+          },
+          {
+            label: "Open applications",
+            value: String(snapshot.openApplications),
+            detail: `${snapshot.totalApplications} applications in total`,
+            icon: ClipboardList,
+            style: "bg-amber-50 text-amber-700",
+          },
+        ]}
+      />
 
-          return (
-            <article
-              key={metric.label}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-            >
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl ${metric.style}`}
-              >
-                <Icon size={21} />
-              </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Panel
+          title="Recently onboarded"
+          description="Businesses that went live most recently"
+        >
+          {snapshot.recentOnboardings.length === 0 ? (
+            <EmptyRow message="No businesses onboarded yet." />
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {snapshot.recentOnboardings.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center justify-between gap-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                      {item.organisation}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Corporate ID {item.corporateId}
+                    </p>
+                  </div>
 
-              <p className="mt-5 text-sm font-medium text-slate-500">
-                {metric.label}
-              </p>
+                  <TimeText value={item.at} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
 
-              <p className="mt-2 text-3xl font-bold text-slate-950">
-                {metric.value}
-              </p>
+        <Panel
+          title="Payments by status"
+          description="Where payments across the platform stand today"
+        >
+          {snapshot.paymentsByStatus.length === 0 ? (
+            <EmptyRow message="No payments yet." />
+          ) : (
+            <ul className="space-y-4">
+              {snapshot.paymentsByStatus.map((item) => (
+                <li key={item.status}>
+                  <div className="flex items-center justify-between text-sm">
+                    <StatusPill status={item.status} />
+                    <span className="font-semibold text-slate-900">
+                      {item.count}
+                    </span>
+                  </div>
 
-              <p className="mt-2 text-xs text-slate-500">
-                {metric.detail}
-              </p>
-            </article>
-          );
-        })}
-      </div>
-
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-950">
-          Platform overview
-        </h3>
-
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Merchant onboarding, product configuration, integration
-          monitoring and support-management capabilities will be
-          added in the upcoming stages.
-        </p>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-blue-600"
+                      style={{
+                        width: `${(item.count / maxStatusCount) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </div>
     </section>
   );

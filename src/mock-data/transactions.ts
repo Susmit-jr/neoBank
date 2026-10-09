@@ -66,17 +66,4 @@ export const mockTransactions: AccountTransaction[] = [
     closingBalance: 9100000,
     status: "SUCCESSFUL",
   },
-  {
-    id: "TXN-006",
-    accountId: "ACC-001",
-    transactionReference: "UTR202609200029",
-    transactionDate: "2026-09-20T14:15:00",
-    valueDate: "2026-09-20",
-    description: "Tax payment",
-    counterpartyName: "Government Tax Account",
-    type: "DEBIT",
-    amount: 320000,
-    closingBalance: 17685000,
-    status: "SUCCESSFUL",
-  },
 ];
