@@ -21,13 +21,6 @@ export type BankLoginInput = {
   password: string;
 };
 
-export type StageAuthoriser = {
-  userId: string;
-  name: string;
-  role: string;
-  status: "APPROVED" | "YOU" | "PENDING";
-};
-
 export const BANK_OTP_MAX_ATTEMPTS = 3;
 // shortcut: fixed OTP for the demo, replace with the bank's OTP service
 const DEMO_OTP = "123456";
@@ -55,7 +48,7 @@ export type BankSessionDetails = (
       funding: FundingRequest;
       approvalStage: ApprovalRequestStage;
     }
-) & { authorisers: StageAuthoriser[] };
+);
 
 export type CompleteAuthorisationResult = {
   beneficiary: Beneficiary;
@@ -86,31 +79,12 @@ function countStageApprovals(
   ).length;
 }
 
+// Deliberately does not say who the remaining checkers are.
 function awaitingMessage(
-  database: ReturnType<typeof getMockDatabase>,
   stage: ApprovalRequestStage,
   approvalCount: number,
 ): string {
-  const approvedIds = new Set(
-    database.approvalDecisions
-      .filter(
-        (item) =>
-          item.approvalRequestStageId === stage.id &&
-          item.action === "APPROVED",
-      )
-      .map((item) => item.actionedByUserId),
-  );
-
-  const pendingNames = stage.eligibleUserIds
-    .filter((id) => !approvedIds.has(id))
-    .map(
-      (id) =>
-        database.users.find((user) => user.id === id)
-          ?.fullName,
-    )
-    .filter(Boolean);
-
-  return `Your authorisation has been recorded. ${approvalCount} of ${stage.requiredApprovals} authorisations completed. Awaiting ${stage.requiredApprovals - approvalCount} more from: ${pendingNames.join(", ")}.`;
+  return `Your authorisation is recorded. The request has been forwarded for further approval and is now partially approved (${approvalCount} of ${stage.requiredApprovals}).`;
 }
 
 export async function createBankAuthorisationSession(
@@ -620,46 +594,6 @@ export async function getBankSessionDetails(
     );
   }
 
-  const approvedUserIds = new Set(
-    database.approvalDecisions
-      .filter(
-        (item) =>
-          item.approvalRequestStageId ===
-            approvalStage.id &&
-          item.action === "APPROVED",
-      )
-      .map((item) => item.actionedByUserId),
-  );
-
-  const authorisers: StageAuthoriser[] =
-    approvalStage.eligibleUserIds.flatMap(
-      (userId) => {
-        const eligibleUser = database.users.find(
-          (item) => item.id === userId,
-        );
-
-        if (!eligibleUser) {
-          return [];
-        }
-
-        return [
-          {
-            userId,
-            name: eligibleUser.fullName,
-            role: eligibleUser.role
-              .split("_")
-              .map((word) => word[0] + word.slice(1).toLowerCase())
-              .join(" "),
-            status: approvedUserIds.has(userId)
-              ? "APPROVED"
-              : userId === session.platformUserId
-                ? "YOU"
-                : "PENDING",
-          } as const,
-        ];
-      },
-    );
-
   if (
     session.requestType ===
     "BENEFICIARY_CREATION"
@@ -681,7 +615,6 @@ export async function getBankSessionDetails(
       session,
       beneficiary,
       approvalStage,
-      authorisers,
     };
   }
 
@@ -702,7 +635,6 @@ export async function getBankSessionDetails(
       session,
       payment,
       approvalStage,
-      authorisers,
     };
   }
 
@@ -722,7 +654,6 @@ export async function getBankSessionDetails(
       session,
       funding,
       approvalStage,
-      authorisers,
     };
   }
 
@@ -969,7 +900,7 @@ export async function approveThroughBank(
       result = {
         beneficiary: structuredClone(beneficiary),
         nextStageExists: false,
-        message: awaitingMessage(database, currentStage, approvalCount),
+        message: awaitingMessage(currentStage, approvalCount),
       };
 
       return;
@@ -1017,7 +948,7 @@ export async function approveThroughBank(
       beneficiary: structuredClone(beneficiary),
       nextStageExists: false,
       message:
-        "All MOP authorisations are complete. The beneficiary is now active.",
+        "Beneficiary approved successfully and is now active.",
     };
   });
 
@@ -1170,7 +1101,7 @@ export async function approvePaymentThroughBank(
       result = {
         payment: structuredClone(payment),
         nextStageExists: false,
-        message: awaitingMessage(database, currentStage, approvalCount),
+        message: awaitingMessage(currentStage, approvalCount),
       };
 
       return;
@@ -1219,7 +1150,7 @@ export async function approvePaymentThroughBank(
       payment: structuredClone(payment),
       nextStageExists: false,
       message:
-        "Transaction authorisation completed successfully.",
+        "Transaction approved successfully.",
     };
   });
 
@@ -1372,7 +1303,7 @@ export async function approveFundingThroughBank(
       result = {
         funding: structuredClone(funding),
         nextStageExists: false,
-        message: awaitingMessage(database, currentStage, approvalCount),
+        message: awaitingMessage(currentStage, approvalCount),
       };
 
       return;
@@ -1421,7 +1352,7 @@ export async function approveFundingThroughBank(
       funding: structuredClone(funding),
       nextStageExists: false,
       message:
-        "Authorisation completed. The money will be added to your account shortly.",
+        "Approved successfully. The money will be added to your account shortly.",
     };
   });
 

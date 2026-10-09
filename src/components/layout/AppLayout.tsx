@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getPageMeta } from "../../design-system/portalTheme";
 import { processAllAuthorisedFunding } from "../../services/fundingService";
 import { processAllAuthorisedPayments } from "../../services/paymentProcessingService";
+import { useNotifications } from "../../features/notifications/useNotifications";
 import { useAuth } from "../../store/AuthContext";
 import type { PortalType } from "../../types/auth";
 import Header from "./Header";
@@ -26,6 +27,7 @@ function AppLayout({
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const notifications = useNotifications(user);
 
   // Authorised payments are sent to the bank wherever the user is in the portal.
   useEffect(() => {
@@ -75,6 +77,7 @@ function AppLayout({
         user={user}
         isOpen={isSidebarOpen}
         isCollapsed={isSidebarCollapsed}
+        approvalBadge={notifications.pendingApprovals}
         onClose={() => setIsSidebarOpen(false)}
         onToggleCollapse={() =>
           setIsSidebarCollapsed((current) => !current)
@@ -94,6 +97,7 @@ function AppLayout({
           pageSection={pageMeta.section}
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onLogout={handleLogout}
+          notifications={notifications}
         />
 
         <main id="main-content" className="p-4 sm:p-6 lg:p-8">

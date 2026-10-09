@@ -36,6 +36,7 @@ type SidebarProps = {
   isCollapsed: boolean;
   onClose: () => void;
   onToggleCollapse: () => void;
+  approvalBadge: number;
 };
 
 const navigationByPortal: Record<
@@ -135,6 +136,7 @@ function Sidebar({
   isCollapsed,
   onClose,
   onToggleCollapse,
+  approvalBadge,
 }: SidebarProps) {
   const navigationItems = navigationByPortal[portal].filter(
     (item) =>
@@ -250,6 +252,20 @@ function Sidebar({
                 >
                   <Icon size={19} />
                   {!isCollapsed && item.label}
+
+                  {item.path === "/merchant/approvals" &&
+                    approvalBadge > 0 && (
+                      <span
+                        aria-label={`${approvalBadge} pending approvals`}
+                        className={`flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold text-white ${
+                          isCollapsed
+                            ? "absolute right-1 top-1"
+                            : "ml-auto"
+                        }`}
+                      >
+                        {approvalBadge > 9 ? "9+" : approvalBadge}
+                      </span>
+                    )}
                 </NavLink>
               );
             })}

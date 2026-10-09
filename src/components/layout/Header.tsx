@@ -1,4 +1,7 @@
-import { ChevronDown, LogOut, Menu } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import type { Notifications } from "../../features/notifications/useNotifications";
+import { formatDateTime } from "../../utils/dates";
 import { useEffect, useRef, useState } from "react";
 import type {
   AuthenticatedUser,
@@ -13,6 +16,7 @@ type HeaderProps = {
   pageSection: string;
   onOpenSidebar: () => void;
   onLogout: () => void;
+  notifications: Notifications;
 };
 
 function getInitials(fullName: string) {
@@ -30,12 +34,23 @@ function Header({
   pageDescription,
   onOpenSidebar,
   onLogout,
+  notifications,
 }: HeaderProps) {
+  const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isBellOpen, setIsBellOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
+      if (
+        bellRef.current &&
+        !bellRef.current.contains(event.target as Node)
+      ) {
+        setIsBellOpen(false);
+      }
+
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(event.target as Node)
@@ -84,6 +99,77 @@ function Header({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <div ref={bellRef} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                const opening = !isBellOpen;
+                setIsBellOpen(opening);
+                setIsProfileOpen(false);
+                if (opening) notifications.markSeen();
+              }}
+              aria-label={`Notifications${notifications.badge ? `, ${notifications.badge} new` : ""}`}
+              aria-expanded={isBellOpen}
+              className="relative rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-2.5 text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+            >
+              <Bell size={20} />
+
+              {notifications.badge > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-white">
+                  {notifications.badge > 9 ? "9+" : notifications.badge}
+                </span>
+              )}
+            </button>
+
+            {isBellOpen && (
+              <div className="absolute right-0 mt-2 w-96 max-w-[90vw] overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] shadow-2xl shadow-slate-950/10">
+                <div className="border-b border-[var(--border-subtle)] px-4 py-3">
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">
+                    Notifications
+                  </p>
+                </div>
+
+                {notifications.items.length === 0 ? (
+                  <p className="p-6 text-center text-sm text-[var(--text-muted)]">
+                    You&apos;re all caught up.
+                  </p>
+                ) : (
+                  <ul className="max-h-96 divide-y divide-[var(--border-subtle)] overflow-y-auto">
+                    {notifications.items.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsBellOpen(false);
+                            navigate(item.to);
+                          }}
+                          className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-[var(--surface-muted)]"
+                        >
+                          <span
+                            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${item.actionable ? "bg-red-600" : "bg-[var(--brand-primary)]"}`}
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-[var(--text-primary)]">
+                              {item.title}
+                            </span>
+                            <span className="block truncate text-xs text-[var(--text-secondary)]">
+                              {item.detail}
+                            </span>
+                            <span className="mt-0.5 block text-[11px] text-[var(--text-muted)]">
+                              {item.actionable
+                                ? "Action needed"
+                                : formatDateTime(item.at)}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+
           <div ref={profileMenuRef} className="relative">
             <button
               type="button"

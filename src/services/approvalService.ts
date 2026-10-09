@@ -419,6 +419,13 @@ export async function getApprovalTrayItems(
     window.setTimeout(resolve, 300);
   });
 
+  return getApprovalTrayItemsNow(organisationId, userId);
+}
+
+export function getApprovalTrayItemsNow(
+  organisationId: string,
+  userId: string,
+): ApprovalTrayItem[] {
   const database = getMockDatabase();
 
   const eligibleStages = database.approvalStages

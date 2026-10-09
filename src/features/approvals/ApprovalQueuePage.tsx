@@ -698,10 +698,11 @@ function ApprovalQueuePage() {
             type="button"
             aria-label="Close approval review"
             onClick={closeReviewPanel}
-            className="fixed inset-0 z-30 bg-slate-950/50"
+            className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-[2px]"
           />
 
-          <aside className="fixed inset-y-0 right-0 z-40 w-full max-w-xl overflow-y-auto bg-white shadow-2xl">
+          <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center p-4">
+          <aside className="pointer-events-auto max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
             <div className="flex items-start justify-between border-b border-slate-200 p-6">
               <div>
                 <RequestTypeBadge
@@ -841,6 +842,7 @@ function ApprovalQueuePage() {
               </div>
             </div>
           </aside>
+        </div>
         </>
       )}
 

@@ -539,7 +539,9 @@ useEffect(() => {
     return notice(
       <CheckCircle2 size={30} />,
       "bg-emerald-50 text-emerald-700",
-      "Authorisation completed",
+      successMessage.includes("partially approved")
+        ? "Partially approved"
+        : "Approved",
       <>
         {successMessage}
         <span className="mt-5 block text-slate-500">
@@ -791,111 +793,35 @@ useEffect(() => {
         ))}
       </div>
 
-      <div className="mt-5 grid gap-5 md:grid-cols-2">
-        <AuthorisersPanel
-          authorisers={details.authorisers}
-          required={details.approvalStage.requiredApprovals}
-        />
+      <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-center">
+        <p className="flex-1 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
+          By selecting Authorise, you confirm that the displayed {subject}{" "}
+          details are correct.
+          {details.approvalStage.requiredApprovals > 1 &&
+            ` This request needs ${details.approvalStage.requiredApprovals} authorisations in total.`}
+        </p>
 
-        <div className="flex flex-col justify-between gap-4">
-          <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
-            By selecting Authorise, you confirm that the displayed{" "}
-            {subject} details are correct.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => void handleAuthorise()}
-            disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
-          >
-            {isSubmitting ? (
-              <LoaderCircle size={18} className="animate-spin" />
-            ) : (
-              <CheckCircle2 size={18} />
-            )}
-            {isSubmitting
-              ? "Authorising..."
-              : details.requestType === "ADD_BALANCE"
-                ? "Authorise add balance"
-                : isPayment
-                  ? "Authorise transaction"
-                  : "Authorise beneficiary"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => void handleAuthorise()}
+          disabled={isSubmitting}
+          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60 md:w-64"
+        >
+          {isSubmitting ? (
+            <LoaderCircle size={18} className="animate-spin" />
+          ) : (
+            <CheckCircle2 size={18} />
+          )}
+          {isSubmitting
+            ? "Authorising..."
+            : details.requestType === "ADD_BALANCE"
+              ? "Authorise add balance"
+              : isPayment
+                ? "Authorise transaction"
+                : "Authorise beneficiary"}
+        </button>
       </div>
     </div>,
-  );
-}
-
-function AuthorisersPanel({
-  authorisers,
-  required,
-}: {
-  authorisers: BankSessionDetails["authorisers"];
-  required: number;
-}) {
-  const approved = authorisers.filter(
-    (item) => item.status === "APPROVED",
-  ).length;
-  const remainingAfterYou = Math.max(
-    required - approved - 1,
-    0,
-  );
-  const others = authorisers.filter(
-    (item) => item.status === "PENDING",
-  );
-
-  return (
-    <div className="rounded-2xl border border-slate-200 p-4">
-      <p className="text-sm font-semibold text-slate-950">
-        {remainingAfterYou === 0
-          ? "Your authorisation completes this request."
-          : `You are authorising this request. ${remainingAfterYou} more authorisation${remainingAfterYou > 1 ? "s" : ""} required after yours.`}
-      </p>
-
-      <ul className="mt-4 space-y-3">
-        {authorisers.map((item) => (
-          <li
-            key={item.userId}
-            className="flex items-center justify-between text-sm"
-          >
-            <span>
-              <span className="font-semibold text-slate-900">
-                {item.name}
-              </span>
-              <span className="ml-2 text-xs text-slate-500">
-                {item.role}
-              </span>
-            </span>
-
-            <span
-              className={
-                item.status === "APPROVED"
-                  ? "text-xs font-semibold text-emerald-700"
-                  : item.status === "YOU"
-                    ? "text-xs font-semibold text-[var(--brand-primary)]"
-                    : "text-xs font-semibold text-amber-700"
-              }
-            >
-              {item.status === "APPROVED"
-                ? "Authorised"
-                : item.status === "YOU"
-                  ? "You"
-                  : "Pending"}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {remainingAfterYou > 0 && others.length > 0 && (
-        <p className="mt-4 text-xs text-slate-500">
-          Any {remainingAfterYou} of the pending
-          authorisers can complete the remaining
-          authorisation, in any order.
-        </p>
-      )}
-    </div>
   );
 }
 
