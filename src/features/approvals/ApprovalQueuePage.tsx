@@ -839,7 +839,7 @@ function ApprovalQueuePage() {
                 setBankSessionId(null);
                 void loadApprovals();
               }}
-              className="absolute right-3 top-3 rounded-lg bg-white/10 p-1.5 text-white transition hover:bg-white/25"
+              className="absolute right-3 top-3 rounded-lg bg-slate-100 p-1.5 text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
             >
               <X size={18} />
             </button>

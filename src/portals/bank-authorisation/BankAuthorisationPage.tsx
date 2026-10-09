@@ -3,7 +3,6 @@ import {
   Clock3,
   Eye,
   EyeOff,
-  Landmark,
   LoaderCircle,
   LockKeyhole,
   ShieldCheck,
@@ -18,6 +17,7 @@ import {
   type SubmitEvent,
 } from "react";
 import { useParams } from "react-router-dom";
+import IndusIndLogo from "../../components/branding/IndusIndLogo";
 import { getMockDatabase } from "../../services/mockDatabase";
 import {
   approvePaymentThroughBank,
@@ -373,7 +373,7 @@ useEffect(() => {
 
   if (step === "LOADING") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
         <div className="text-center">
           <LoaderCircle
             className="mx-auto animate-spin text-slate-700"
@@ -389,7 +389,7 @@ useEffect(() => {
 
   if (step === "EXPIRED") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
         <section className="w-full max-w-md rounded-3xl border border-amber-200 bg-white p-8 text-center shadow-xl">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
             <Clock3 size={27} />
@@ -408,7 +408,7 @@ useEffect(() => {
           <button
             type="button"
             onClick={closeOrReturn}
-            className="mt-7 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
+            className="mt-7 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white"
           >
             Return to NeoBank
           </button>
@@ -419,7 +419,7 @@ useEffect(() => {
 
   if (step === "ERROR" || !details) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
         <section className="w-full max-w-md rounded-3xl border border-red-200 bg-white p-8 text-center shadow-xl">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-700">
             <LockKeyhole size={27} />
@@ -437,7 +437,7 @@ useEffect(() => {
             
             type="button"
             onClick={closeOrReturn}
-            className="mt-7 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
+            className="mt-7 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white"
           >
             Return to NeoBank
           </button>
@@ -448,7 +448,7 @@ useEffect(() => {
 
   if (step === "SUCCESS") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+      <main data-portal="BANK_ADMIN" className="flex min-h-screen items-center justify-center bg-[var(--app-canvas)] p-6">
         <section className="w-full max-w-md rounded-3xl border border-emerald-200 bg-white p-8 text-center shadow-xl">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
             <CheckCircle2 size={32} />
@@ -470,7 +470,7 @@ useEffect(() => {
           <button
             type="button"
             onClick={closeOrReturn}
-            className="mt-4 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
+            className="mt-4 rounded-xl bg-[var(--brand-primary)] px-6 py-3 text-sm font-semibold text-white"
           >
             Return to NeoBank now
           </button>
@@ -481,6 +481,7 @@ useEffect(() => {
 
   return (
     <main
+      data-portal="BANK_ADMIN"
       className={
         isEmbedded
           ? "min-h-screen bg-white"
@@ -494,32 +495,26 @@ useEffect(() => {
             : "mx-auto max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
         }
       >
-        <header className="bg-slate-950 p-6 pr-14 text-white">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-              <Landmark size={24} />
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Partner Bank
-              </p>
-
-              <h1 className="mt-1 text-lg font-bold">
-                Corporate Authorisation
-              </h1>
-            </div>
+        <header className="border-b-4 border-[var(--brand-primary)] bg-white px-6 py-5 pr-14">
+          <div className="flex items-center justify-between gap-3">
+            <IndusIndLogo />
 
             {secondsRemaining !== null && (
               <p
-                className={`ml-auto text-xs font-semibold ${secondsRemaining <= 60 ? "text-amber-300" : "text-slate-400"}`}
+                className={`text-right text-xs font-semibold ${secondsRemaining <= 60 ? "text-[var(--brand-primary)]" : "text-slate-500"}`}
               >
-                Session expires in{" "}
-                {String(Math.floor(secondsRemaining / 60)).padStart(2, "0")}
-                :{String(secondsRemaining % 60).padStart(2, "0")}
+                Session expires in
+                <span className="block text-sm">
+                  {String(Math.floor(secondsRemaining / 60)).padStart(2, "0")}
+                  :{String(secondsRemaining % 60).padStart(2, "0")}
+                </span>
               </p>
             )}
           </div>
+
+          <h1 className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Corporate Authorisation
+          </h1>
         </header>
 
         {step === "LOGIN" && (
@@ -528,7 +523,7 @@ useEffect(() => {
             className="space-y-5 p-6 sm:p-8"
           >
             <div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand-primary)]">
                 <ShieldCheck size={24} />
               </div>
 
@@ -580,7 +575,7 @@ useEffect(() => {
                   onChange={(event) =>
                     setPassword(event.target.value)
                   }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 text-sm outline-none focus:border-slate-600 focus:ring-4 focus:ring-slate-100"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 text-sm outline-none focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--focus-ring)]"
                   placeholder="Enter bank password"
                 />
 
@@ -605,7 +600,7 @@ useEffect(() => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-strong)] disabled:opacity-60"
             >
               {isSubmitting && (
                 <LoaderCircle
@@ -618,7 +613,7 @@ useEffect(() => {
             </button>
 
             {demoBankUser && (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
+              <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-4 text-xs leading-5 text-[var(--text-primary)]">
                 <p className="font-semibold uppercase tracking-wide">
                   Demo credentials for {demoBankUser.fullName}
                 </p>
@@ -640,7 +635,7 @@ useEffect(() => {
                     setPassword(demoBankUser.password);
                     setError("");
                   }}
-                  className="mt-3 rounded-lg border border-blue-700 px-3 py-1.5 text-xs font-semibold text-blue-800 transition hover:bg-blue-700 hover:text-white"
+                  className="mt-3 rounded-lg border border-[var(--brand-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--brand-primary)] transition hover:bg-[var(--brand-primary)] hover:text-white"
                 >
                   Use these credentials
                 </button>
@@ -655,7 +650,7 @@ useEffect(() => {
             className="space-y-5 p-6 sm:p-8"
           >
             <div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand-primary)]">
                 <LockKeyhole size={24} />
               </div>
 
@@ -688,7 +683,7 @@ useEffect(() => {
             <button
               type="submit"
               disabled={isSubmitting || otp.length < 6}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-strong)] disabled:opacity-60"
             >
               {isSubmitting && (
                 <LoaderCircle
@@ -700,7 +695,7 @@ useEffect(() => {
               Verify and continue
             </button>
 
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-4 text-xs leading-5 text-[var(--text-primary)]">
               Demo OTP: <strong>123456</strong>
             </div>
           </form>
@@ -958,7 +953,7 @@ function AuthorisersPanel({
                 item.status === "APPROVED"
                   ? "text-xs font-semibold text-emerald-700"
                   : item.status === "YOU"
-                    ? "text-xs font-semibold text-blue-700"
+                    ? "text-xs font-semibold text-[var(--brand-primary)]"
                     : "text-xs font-semibold text-amber-700"
               }
             >
@@ -1010,7 +1005,7 @@ function BankInput({
           onChange(event.target.value)
         }
         placeholder={placeholder}
-        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-600 focus:ring-4 focus:ring-slate-100"
+        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--focus-ring)]"
       />
     </label>
   );

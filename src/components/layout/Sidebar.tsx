@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import IndusIndLogo from "../branding/IndusIndLogo";
 import { portalThemes } from "../../design-system/portalTheme";
 import type {
   AuthenticatedUser,
@@ -160,6 +161,22 @@ function Sidebar({
             isCollapsed ? "justify-center px-3" : "justify-between px-5"
           }`}
         >
+          {portal === "BANK_ADMIN" ? (
+            <div className="min-w-0">
+              {isCollapsed ? (
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--sidebar-mark)] text-lg font-black text-[var(--sidebar-mark-text)]">
+                  I
+                </div>
+              ) : (
+                <>
+                  <IndusIndLogo className="h-9" />
+                  <p className="mt-1 truncate text-xs font-medium text-[var(--text-secondary)]">
+                    {theme.workspace}
+                  </p>
+                </>
+              )}
+            </div>
+          ) : (
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--sidebar-mark)] text-sm font-black tracking-[-0.04em] text-[var(--sidebar-mark-text)] shadow-sm">
               {theme.brandMark}
@@ -177,6 +194,8 @@ function Sidebar({
             </div>
             )}
           </div>
+
+          )}
 
           {!isCollapsed && (
             <button

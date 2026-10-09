@@ -1,6 +1,7 @@
 import { useEffect, useState, type SubmitEvent } from "react";
 import { Eye, EyeOff, LoaderCircle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import IndusIndLogo from "../../components/branding/IndusIndLogo";
 import { portalThemes } from "../../design-system/portalTheme";
 import { useAuth } from "../../store/AuthContext";
 import type { PortalType } from "../../types/auth";
@@ -162,6 +163,11 @@ function LoginPanel({ portal, onClose }: LoginPanelProps) {
         className={`absolute right-4 top-20 flex max-h-[calc(100vh-6rem)] w-[calc(100%-2rem)] max-w-[26rem] flex-col overflow-y-auto rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] shadow-2xl shadow-slate-950/20 transition duration-300 sm:right-8 ${entered ? "translate-y-0 scale-100 opacity-100" : "-translate-y-3 scale-95 opacity-0"}`}
       >
         <div className="flex items-center justify-between bg-[var(--brand-primary)] px-6 py-5 text-white">
+          {portal === "BANK_ADMIN" ? (
+            <div className="rounded-xl bg-white px-4 py-2.5">
+              <IndusIndLogo className="h-8" />
+            </div>
+          ) : (
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-sm font-black text-[var(--brand-primary)]">
               {theme.brandMark}
@@ -175,6 +181,8 @@ function LoginPanel({ portal, onClose }: LoginPanelProps) {
               </p>
             </div>
           </div>
+
+          )}
 
           <button
             type="button"
