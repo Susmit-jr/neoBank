@@ -1,5 +1,6 @@
 import {
   CheckCircle2,
+  Clock3,
   Eye,
   EyeOff,
   Landmark,
@@ -31,6 +32,7 @@ type PageStep =
   | "LOGIN"
   | "OTP"
   | "REVIEW"
+  | "EXPIRED"
   | "SUCCESS"
   | "ERROR";
 
@@ -109,14 +111,25 @@ useEffect(() => {
       const sessionDetails =
         await getBankSessionDetails(sessionId);
 
+      const finalStatus = sessionDetails.session.status;
+
       if (
-        sessionDetails.session.status === "APPROVED" ||
-        sessionDetails.session.status === "REJECTED" ||
-        sessionDetails.session.status === "FAILED" ||
-        sessionDetails.session.status === "EXPIRED"
+        finalStatus === "APPROVED" ||
+        finalStatus === "REJECTED" ||
+        finalStatus === "FAILED" ||
+        finalStatus === "EXPIRED"
       ) {
+        if (finalStatus === "EXPIRED") {
+          setStep("EXPIRED");
+          return;
+        }
+
         setError(
-          "This bank authorisation session is no longer available.",
+          finalStatus === "APPROVED"
+            ? "This authorisation has already been completed. You can close this window."
+            : finalStatus === "REJECTED"
+              ? "This request has been rejected and is no longer available for authorisation."
+              : "This bank authorisation session is no longer available.",
         );
         setStep("ERROR");
         return;
@@ -138,6 +151,14 @@ useEffect(() => {
           : "LOGIN",
       );
     } catch (loadError) {
+      if (
+        loadError instanceof Error &&
+        loadError.message.includes("expired")
+      ) {
+        setStep("EXPIRED");
+        return;
+      }
+
       setError(
         loadError instanceof Error
           ? loadError.message
@@ -219,6 +240,40 @@ useEffect(() => {
       setIsSubmitting(false);
     }
   }
+
+  const expiresAt = details?.session.expiresAt;
+  const [now, setNow] = useState(() => Date.now());
+  const secondsRemaining = expiresAt
+    ? Math.max(
+        0,
+        Math.floor((new Date(expiresAt).getTime() - now) / 1000),
+      )
+    : null;
+
+  useEffect(() => {
+    if (!expiresAt || !["LOGIN", "OTP", "REVIEW"].includes(step)) {
+      return;
+    }
+
+    const timer = window.setInterval(
+      () => setNow(Date.now()),
+      1000,
+    );
+
+    return () => window.clearInterval(timer);
+  }, [expiresAt, step]);
+
+  useEffect(() => {
+    if (
+      secondsRemaining === 0 &&
+      sessionId &&
+      ["LOGIN", "OTP", "REVIEW"].includes(step)
+    ) {
+      // Marks the session expired on the bank side as well.
+      void getBankSessionDetails(sessionId).catch(() => undefined);
+      setStep("EXPIRED");
+    }
+  }, [secondsRemaining, sessionId, step]);
 
   async function handleOtp(
     event: SubmitEvent<HTMLFormElement>,
@@ -311,6 +366,36 @@ useEffect(() => {
     );
   }
 
+  if (step === "EXPIRED") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
+        <section className="w-full max-w-md rounded-3xl border border-amber-200 bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
+            <Clock3 size={27} />
+          </div>
+
+          <h1 className="mt-5 text-xl font-bold text-slate-950">
+            Session expired
+          </h1>
+
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            For your security, a bank authorisation window stays
+            open for 10 minutes. Nothing has been authorised. Return
+            to NeoBank and select Authorise to start again.
+          </p>
+
+          <button
+            type="button"
+            onClick={closeOrReturn}
+            className="mt-7 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
+          >
+            Return to NeoBank
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   if (step === "ERROR" || !details) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
@@ -391,6 +476,16 @@ useEffect(() => {
                 Corporate Authorisation
               </h1>
             </div>
+
+            {secondsRemaining !== null && (
+              <p
+                className={`ml-auto text-xs font-semibold ${secondsRemaining <= 60 ? "text-amber-300" : "text-slate-400"}`}
+              >
+                Session expires in{" "}
+                {String(Math.floor(secondsRemaining / 60)).padStart(2, "0")}
+                :{String(secondsRemaining % 60).padStart(2, "0")}
+              </p>
+            )}
           </div>
         </header>
 

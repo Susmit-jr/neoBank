@@ -22,7 +22,9 @@ import {
   rejectRequest,
 } from "../../services/approvalService";
 import {
-  createBankAuthorisationSession, createPaymentBankAuthorisationSession,
+  createBankAuthorisationSession,
+  createPaymentBankAuthorisationSession,
+  getOpenBankSession,
 } from "../../services/authorisationService";
 import { useAuth } from "../../store/AuthContext";
 import type {
@@ -108,6 +110,21 @@ function ApprovalQueuePage() {
 
   const [isRejecting, setIsRejecting] =
     useState(false);
+
+  // Re-evaluate unfinished bank sessions when the user comes back to this tab.
+  const [, setFocusTick] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => setFocusTick((tick) => tick + 1);
+
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, []);
+
+  const openBankSession =
+    user?.id && selectedItem
+      ? getOpenBankSession(selectedItem.requestId, user.id)
+      : undefined;
 
   const loadApprovals = useCallback(async () => {
     if (!user?.id || !user.organisationId) {
@@ -780,6 +797,23 @@ function ApprovalQueuePage() {
                 </p>
               </div>
 
+              {openBankSession && (
+                <div
+                  role="status"
+                  className="rounded-xl border border-orange-300 bg-orange-50 p-4 text-sm leading-6 text-orange-900"
+                >
+                  <p className="font-semibold">
+                    Authorisation not completed
+                  </p>
+                  <p className="mt-1">
+                    You started authorising this request with the
+                    bank but did not finish. Resume to continue
+                    where you left off. The session expires at{" "}
+                    {formatDateTime(openBankSession.expiresAt)}.
+                  </p>
+                </div>
+              )}
+
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
                 Selecting Authorise will open the
                 bank-controlled authentication window. Use
@@ -808,7 +842,9 @@ function ApprovalQueuePage() {
 
                   {isAuthorising
                     ? "Opening..."
-                    : "Authorise"}
+                    : openBankSession
+                      ? "Resume authorisation"
+                      : "Authorise"}
                 </button>
               </div>
             </div>

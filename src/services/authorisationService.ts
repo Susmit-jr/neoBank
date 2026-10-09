@@ -397,6 +397,21 @@ export async function createPaymentBankAuthorisationSession(
   return session;
 }
 
+// An unfinished, unexpired session lets the checker resume instead of starting again.
+export function getOpenBankSession(
+  requestId: string,
+  platformUserId: string,
+): BankAuthorisationSession | undefined {
+  return getMockDatabase().bankAuthorisationSessions.find(
+    (session) =>
+      session.requestId === requestId &&
+      session.platformUserId === platformUserId &&
+      (session.status === "CREATED" ||
+        session.status === "AUTHENTICATED") &&
+      !isSessionExpired(session),
+  );
+}
+
 export async function getBankSessionDetails(
   sessionId: string,
 ): Promise<BankSessionDetails> {
@@ -428,35 +443,6 @@ export async function getBankSessionDetails(
 
       if (storedSession) {
         storedSession.status = "EXPIRED";
-      }
-
-      if (
-        session.requestType ===
-        "BENEFICIARY_CREATION"
-      ) {
-        const beneficiary =
-          updatedDatabase.beneficiaries.find(
-            (item) =>
-              item.id === session.requestId,
-          );
-
-        if (beneficiary) {
-          beneficiary.status =
-            "AUTHORISATION_EXPIRED";
-        }
-      }
-
-      if (session.requestType === "PAYMENT") {
-        const payment =
-          updatedDatabase.payments.find(
-            (item) =>
-              item.id === session.requestId,
-          );
-
-        if (payment) {
-          payment.status =
-            "AUTHORISATION_EXPIRED";
-        }
       }
     });
 
