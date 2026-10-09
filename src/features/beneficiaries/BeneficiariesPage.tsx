@@ -1,3 +1,4 @@
+import CancelRequestButton from "../../components/status/CancelRequestButton";
 import ApprovalTimeline from "../../components/status/ApprovalTimeline";
 import {
   Building2,
@@ -753,6 +754,27 @@ function BeneficiariesPage() {
                       ? `Version ${selectedBeneficiary.appliedMopVersion}`
                       : "Not applicable"
                   }
+                />
+              </div>
+
+              {selectedBeneficiary.status === "REJECTED" && (
+                <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">
+                  This beneficiary was rejected by a checker and
+                  has been cancelled. Add the beneficiary again
+                  to retry.
+                </div>
+              )}
+
+              <div className="mt-8">
+                <CancelRequestButton
+                  requestKind="BENEFICIARY"
+                  requestId={selectedBeneficiary.id}
+                  createdByUserId={selectedBeneficiary.createdByUserId}
+                  status={selectedBeneficiary.status}
+                  onCancelled={() => {
+                    setSelectedBeneficiary(null);
+                    void loadBeneficiaries();
+                  }}
                 />
               </div>
 

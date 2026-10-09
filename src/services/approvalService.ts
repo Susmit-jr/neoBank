@@ -124,77 +124,130 @@ export function areAllApprovalStagesComplete(
   );
 }
 
-export type RejectBeneficiaryInput = {
-  beneficiaryId: string;
+export type RequestKind = "BENEFICIARY" | "PAYMENT";
+
+export type RejectRequestInput = {
+  requestKind: RequestKind;
+  requestId: string;
   actionedByUserId: string;
   actionedByName: string;
   remarks: string;
 };
 
-export type RejectBeneficiaryResult = {
-  beneficiaryId: string;
-  beneficiaryReference: string;
-  status: "REJECTED";
+export type RequestActionResult = {
+  requestId: string;
+  requestReference: string;
+  status: "REJECTED" | "CANCELLED";
   message: string;
 };
 
-export async function rejectBeneficiaryRequest(
-  input: RejectBeneficiaryInput,
-): Promise<RejectBeneficiaryResult> {
+const OPEN_STATUSES = [
+  "PENDING_AUTHORISATION",
+  "AUTHORISATION_IN_PROGRESS",
+  "AWAITING_NEXT_AUTHORISER",
+];
+
+function findRequest(
+  database: ReturnType<typeof getMockDatabase>,
+  requestKind: RequestKind,
+  requestId: string,
+) {
+  const request =
+    requestKind === "PAYMENT"
+      ? database.payments.find(
+          (item) => item.id === requestId,
+        )
+      : database.beneficiaries.find(
+          (item) => item.id === requestId,
+        );
+
+  if (!request) {
+    throw new Error("The request could not be found.");
+  }
+
+  if (!OPEN_STATUSES.includes(request.status)) {
+    throw new Error(
+      "This request is no longer awaiting authorisation.",
+    );
+  }
+
+  return request;
+}
+
+function getReference(
+  request: ReturnType<typeof findRequest>,
+): string {
+  return "paymentReference" in request
+    ? request.paymentReference
+    : request.beneficiaryReference;
+}
+
+// Closes every open stage and bank session for the request, then marks it final.
+function closeRequest(
+  database: ReturnType<typeof getMockDatabase>,
+  requestId: string,
+  stageStatus: "REJECTED",
+  sessionStatus: "REJECTED",
+  at: string,
+) {
+  database.approvalStages
+    .filter(
+      (stage) =>
+        stage.requestId === requestId &&
+        (stage.status === "PENDING" ||
+          stage.status === "IN_PROGRESS"),
+    )
+    .forEach((stage) => {
+      stage.status = stageStatus;
+      stage.completedAt = at;
+    });
+
+  database.bankAuthorisationSessions
+    .filter(
+      (session) =>
+        session.requestId === requestId &&
+        (session.status === "CREATED" ||
+          session.status === "AUTHENTICATED"),
+    )
+    .forEach((session) => {
+      session.status = sessionStatus;
+      session.completedAt = at;
+    });
+}
+
+// A rejection by any checker cancels the request for good; the maker must start again.
+export async function rejectRequest(
+  input: RejectRequestInput,
+): Promise<RequestActionResult> {
   const remarks = input.remarks.trim();
 
   if (!remarks) {
-    throw new Error(
-      "Rejection remarks are mandatory.",
-    );
+    throw new Error("Rejection remarks are mandatory.");
   }
 
   const database = getMockDatabase();
 
-  const beneficiary = database.beneficiaries.find(
-    (item) => item.id === input.beneficiaryId,
+  const request = findRequest(
+    database,
+    input.requestKind,
+    input.requestId,
   );
 
-  if (!beneficiary) {
+  if (request.createdByUserId === input.actionedByUserId) {
     throw new Error(
-      "The beneficiary request could not be found.",
+      "The Maker cannot reject their own request.",
     );
   }
 
-  if (
-    beneficiary.status !== "PENDING_AUTHORISATION" &&
-    beneficiary.status !== "AUTHORISATION_IN_PROGRESS" &&
-    beneficiary.status !== "AWAITING_NEXT_AUTHORISER"
-  ) {
-    throw new Error(
-      "This beneficiary request is not available for rejection.",
-    );
-  }
-
-  if (
-    beneficiary.createdByUserId ===
-    input.actionedByUserId
-  ) {
-    throw new Error(
-      "The Maker cannot reject their own beneficiary request.",
-    );
-  }
-
-  const currentStage = database.approvalStages
-    .filter(
-      (stage) =>
-        stage.requestId === input.beneficiaryId &&
-        (stage.status === "PENDING" ||
-          stage.status === "IN_PROGRESS"),
-    )
-    .sort(
-      (first, second) =>
-        first.stageSequence - second.stageSequence,
-    )[0];
+  const currentStage = getCurrentApprovalStage(
+    database.approvalStages.filter(
+      (stage) => stage.requestId === input.requestId,
+    ),
+  );
 
   if (!currentStage) {
     throw new Error(
-      "No pending MOP stage exists for this beneficiary.",
+      "No pending MOP stage exists for this request.",
     );
   }
 
@@ -208,115 +261,135 @@ export async function rejectBeneficiaryRequest(
     );
   }
 
-  const userAlreadyActioned =
+  if (
     database.approvalDecisions.some(
       (decision) =>
         decision.approvalRequestStageId ===
           currentStage.id &&
         decision.actionedByUserId ===
           input.actionedByUserId,
-    );
-
-  if (userAlreadyActioned) {
+    )
+  ) {
     throw new Error(
       "You have already actioned this approval stage.",
     );
   }
 
   const actionedAt = new Date().toISOString();
+  const requestReference = getReference(request);
 
   updateMockDatabase((updatedDatabase) => {
-    const storedBeneficiary =
-      updatedDatabase.beneficiaries.find(
-        (item) =>
-          item.id === input.beneficiaryId,
-      );
-
-    if (!storedBeneficiary) {
-      throw new Error(
-        "The beneficiary request could not be found.",
-      );
-    }
-
-    const storedCurrentStage =
-      updatedDatabase.approvalStages.find(
-        (stage) => stage.id === currentStage.id,
-      );
-
-    if (!storedCurrentStage) {
-      throw new Error(
-        "The current approval stage could not be found.",
-      );
-    }
-
     updatedDatabase.approvalDecisions.push({
       id: crypto.randomUUID(),
-
-      approvalRequestStageId:
-        storedCurrentStage.id,
-
-      requestId: storedBeneficiary.id,
-      requestReference:
-        storedBeneficiary.beneficiaryReference,
-
-      stageId: storedCurrentStage.stageId,
-      stageSequence:
-        storedCurrentStage.stageSequence,
-
+      approvalRequestStageId: currentStage.id,
+      requestId: input.requestId,
+      requestReference,
+      stageId: currentStage.stageId,
+      stageSequence: currentStage.stageSequence,
       action: "REJECTED",
-
-      actionedByUserId:
-        input.actionedByUserId,
-
-      actionedByName:
-        input.actionedByName,
-
+      actionedByUserId: input.actionedByUserId,
+      actionedByName: input.actionedByName,
       actionedAt,
       remarks,
     });
 
-    storedCurrentStage.status = "REJECTED";
-    storedCurrentStage.completedAt = actionedAt;
+    closeRequest(
+      updatedDatabase,
+      input.requestId,
+      "REJECTED",
+      "REJECTED",
+      actionedAt,
+    );
 
-    updatedDatabase.approvalStages
-      .filter(
-        (stage) =>
-          stage.requestId ===
-            storedBeneficiary.id &&
-          stage.id !== storedCurrentStage.id &&
-          (stage.status === "PENDING" ||
-            stage.status === "IN_PROGRESS"),
-      )
-      .forEach((stage) => {
-        stage.status = "REJECTED";
-        stage.completedAt = actionedAt;
-      });
+    const stored =
+      input.requestKind === "PAYMENT"
+        ? updatedDatabase.payments.find(
+            (item) => item.id === input.requestId,
+          )
+        : updatedDatabase.beneficiaries.find(
+            (item) => item.id === input.requestId,
+          );
 
-    updatedDatabase.bankAuthorisationSessions
-      .filter(
-        (session) =>
-          session.requestId ===
-            storedBeneficiary.id &&
-          (session.status === "CREATED" ||
-            session.status === "AUTHENTICATED"),
-      )
-      .forEach((session) => {
-        session.status = "REJECTED";
-        session.completedAt = actionedAt;
-      });
-
-    storedBeneficiary.status = "REJECTED";
-    storedBeneficiary.rejectedAt = actionedAt;
-    storedBeneficiary.rejectionReason = remarks;
+    if (stored) {
+      stored.status = "REJECTED";
+      stored.rejectedAt = actionedAt;
+      stored.rejectionReason = remarks;
+    }
   });
 
   return {
-    beneficiaryId: beneficiary.id,
-    beneficiaryReference:
-      beneficiary.beneficiaryReference,
+    requestId: input.requestId,
+    requestReference,
     status: "REJECTED",
     message:
-      "The beneficiary request has been rejected.",
+      input.requestKind === "PAYMENT"
+        ? "The payment has been rejected and cancelled. The maker must initiate it again."
+        : "The beneficiary request has been rejected and cancelled. The maker must submit it again.",
+  };
+}
+
+// The maker can withdraw a request until a checker has acted on it.
+export async function cancelRequest(input: {
+  requestKind: RequestKind;
+  requestId: string;
+  cancelledByUserId: string;
+}): Promise<RequestActionResult> {
+  const database = getMockDatabase();
+
+  const request = findRequest(
+    database,
+    input.requestKind,
+    input.requestId,
+  );
+
+  if (request.createdByUserId !== input.cancelledByUserId) {
+    throw new Error(
+      "Only the maker who created this request can cancel it.",
+    );
+  }
+
+  if (
+    database.approvalDecisions.some(
+      (decision) =>
+        decision.requestId === input.requestId,
+    )
+  ) {
+    throw new Error(
+      "A checker has already acted on this request, so it can no longer be cancelled.",
+    );
+  }
+
+  const cancelledAt = new Date().toISOString();
+  const requestReference = getReference(request);
+
+  updateMockDatabase((updatedDatabase) => {
+    closeRequest(
+      updatedDatabase,
+      input.requestId,
+      "REJECTED",
+      "REJECTED",
+      cancelledAt,
+    );
+
+    const stored =
+      input.requestKind === "PAYMENT"
+        ? updatedDatabase.payments.find(
+            (item) => item.id === input.requestId,
+          )
+        : updatedDatabase.beneficiaries.find(
+            (item) => item.id === input.requestId,
+          );
+
+    if (stored) {
+      stored.status = "CANCELLED";
+    }
+  });
+
+  return {
+    requestId: input.requestId,
+    requestReference,
+    status: "CANCELLED",
+    message: "The request has been cancelled.",
   };
 }
 

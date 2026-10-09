@@ -1,3 +1,4 @@
+import CancelRequestButton from "../../components/status/CancelRequestButton";
 import ApprovalTimeline from "../../components/status/ApprovalTimeline";
 import {
   AlertCircle,
@@ -821,6 +822,25 @@ function PaymentsPage() {
                   </p>
                 </div>
               )}
+
+              {selectedPayment.status === "REJECTED" && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm leading-6 text-red-800">
+                  This payment was rejected by a checker and has
+                  been cancelled. Create a new payment to try
+                  again.
+                </div>
+              )}
+
+              <CancelRequestButton
+                requestKind="PAYMENT"
+                requestId={selectedPayment.id}
+                createdByUserId={selectedPayment.createdByUserId}
+                status={selectedPayment.status}
+                onCancelled={() => {
+                  closePaymentDetails();
+                  void loadPayments();
+                }}
+              />
 
               <ApprovalTimeline
                 requestId={selectedPayment.id}

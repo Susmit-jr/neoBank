@@ -48,6 +48,7 @@ export type BeneficiaryStatus =
   | "RETURNED"
   | "AUTHORISATION_FAILED"
   | "AUTHORISATION_EXPIRED"
+  | "CANCELLED"
   | "INACTIVE";
 
 export type BeneficiaryAccountType =

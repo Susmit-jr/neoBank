@@ -19,7 +19,7 @@ import {
 } from "react-router-dom";
 import {
   getApprovalTrayItems,
-  rejectBeneficiaryRequest,
+  rejectRequest,
 } from "../../services/approvalService";
 import {
   createBankAuthorisationSession, createPaymentBankAuthorisationSession,
@@ -337,13 +337,6 @@ function ApprovalQueuePage() {
       return;
     }
 
-    if (selectedItem.requestType === "PAYMENT") {
-      setError(
-        "Payment rejection will be connected after payment bank authorisation.",
-      );
-      return;
-    }
-
     setRejectionRemarks("");
     setRejectionError("");
     setIsRejectModalOpen(true);
@@ -367,15 +360,6 @@ function ApprovalQueuePage() {
       return;
     }
 
-    if (
-      selectedItem.requestType !== "BENEFICIARY"
-    ) {
-      setRejectionError(
-        "This rejection service currently supports beneficiary requests only.",
-      );
-      return;
-    }
-
     const normalizedRemarks =
       rejectionRemarks.trim();
 
@@ -391,9 +375,9 @@ function ApprovalQueuePage() {
 
     try {
       const result =
-        await rejectBeneficiaryRequest({
-          beneficiaryId:
-            selectedItem.requestId,
+        await rejectRequest({
+          requestKind: selectedItem.requestType,
+          requestId: selectedItem.requestId,
 
           actionedByUserId: user.id,
           actionedByName: user.fullName,
@@ -418,12 +402,6 @@ function ApprovalQueuePage() {
     } finally {
       setIsRejecting(false);
     }
-  }
-
-  function handleReturn() {
-    window.alert(
-      "Return with mandatory correction remarks is currently parked for later implementation.",
-    );
   }
 
   if (isLoading) {
@@ -809,15 +787,7 @@ function ApprovalQueuePage() {
                 credentials to complete the authorisation.
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={handleReturn}
-                  className="rounded-xl border border-amber-300 bg-white px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-50"
-                >
-                  Return
-                </button>
-
+              <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={openRejectModal}
