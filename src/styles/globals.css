@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+:root {
+  font-family:
+    Inter, "Segoe UI", Aptos, Arial, Helvetica, sans-serif;
+  color: #172033;
+  background-color: #f5f6f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --app-canvas: #f5f6f8;
+  --surface-raised: #ffffff;
+  --surface-muted: #f1f3f6;
+  --border-subtle: #e1e5eb;
+  --text-primary: #121826;
+  --text-secondary: #566074;
+  --text-muted: #7b8495;
+  --brand-primary: #16191f;
+  --brand-strong: #08090b;
+  --brand-soft: #eef0f3;
+  --sidebar-surface: #111318;
+  --sidebar-mark: #ffffff;
+  --sidebar-mark-text: #101217;
+  --sidebar-active: #ffffff;
+  --sidebar-active-text: #111318;
+  --header-surface: rgba(255, 255, 255, 0.9);
+  --focus-ring: rgba(22, 25, 31, 0.2);
+  --selection: #dce7ff;
+}
+
+[data-portal="BANK_ADMIN"] {
+  --app-canvas: #f8f5f3;
+  --surface-muted: #f4efed;
+  --border-subtle: #e7ddd9;
+  --text-primary: #25191c;
+  --text-secondary: #6d5b60;
+  --text-muted: #8d7b80;
+  --brand-primary: #8a1538;
+  --brand-strong: #64102a;
+  --brand-soft: #f9eaf0;
+  --sidebar-surface: #4c1025;
+  --sidebar-mark: #ffffff;
+  --sidebar-mark-text: #8a1538;
+  --sidebar-active: #fff7f9;
+  --sidebar-active-text: #76122f;
+  --header-surface: rgba(255, 253, 252, 0.92);
+  --focus-ring: rgba(138, 21, 56, 0.2);
+  --selection: #f6dbe5;
+}
+
+[data-portal="PLATFORM_ADMIN"] {
+  --brand-primary: #1d4ed8;
+  --brand-strong: #173da6;
+  --brand-soft: #eaf0ff;
+  --sidebar-surface: #0f1115;
+  --sidebar-mark: #ffffff;
+  --sidebar-mark-text: #0f1115;
+  --sidebar-active: #ffffff;
+  --sidebar-active-text: #101217;
+  --focus-ring: rgba(29, 78, 216, 0.2);
+  --selection: #dce7ff;
+}
+
+[data-portal="MERCHANT"] {
+  --brand-primary: #147d6f;
+  --brand-strong: #0f6257;
+  --brand-soft: #e5f5f1;
+  --sidebar-surface: #0f1115;
+  --sidebar-mark: #ffffff;
+  --sidebar-mark-text: #0f1115;
+  --sidebar-active: #ffffff;
+  --sidebar-active-text: #101217;
+  --focus-ring: rgba(20, 125, 111, 0.2);
+  --selection: #d8f3ec;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background-color: var(--app-canvas);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+.portal-shell {
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

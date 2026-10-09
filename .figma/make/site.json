@@ -1,0 +1,10 @@
+{
+  "description": "Upload and manage your entire project online to continue development seamlessly with organized planning and version control tools.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

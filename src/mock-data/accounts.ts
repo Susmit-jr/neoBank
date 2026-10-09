@@ -1,0 +1,36 @@
+import type { BankAccount } from "../types/banking";
+
+export const mockAccounts: BankAccount[] = [
+  {
+    id: "ACC-001",
+    organisationId: "ORG-001",
+    accountNumber: "001234567890",
+    maskedAccountNumber: "XXXXXX7890",
+    accountName: "Acme Enterprises Private Limited",
+    accountType: "CURRENT",
+    currency: "INR",
+    bankName: "Partner Bank",
+    branchName: "Mumbai Corporate Branch",
+    ifscCode: "BANK0000123",
+    availableBalance: 18450000,
+    ledgerBalance: 18625000,
+    status: "ACTIVE",
+    isPrimary: true,
+  },
+  {
+    id: "ACC-002",
+    organisationId: "ORG-001",
+    accountNumber: "001234567945",
+    maskedAccountNumber: "XXXXXX7945",
+    accountName: "Acme Enterprises Collections",
+    accountType: "CURRENT",
+    currency: "INR",
+    bankName: "Partner Bank",
+    branchName: "Mumbai Corporate Branch",
+    ifscCode: "BANK0000123",
+    availableBalance: 9950000,
+    ledgerBalance: 10125000,
+    status: "ACTIVE",
+    isPrimary: false,
+  },
+];
