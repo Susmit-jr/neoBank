@@ -1,21 +1,15 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell,
-  Building2,
   ChevronLeft,
   CircleDollarSign,
   FileClock,
   Landmark,
   LayoutDashboard,
-  Link2,
   ListChecks,
-  ReceiptText,
-  Settings,
   ShieldCheck,
   Store,
   Users,
   UserRoundCheck,
-  WalletCards,
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -30,7 +24,6 @@ type NavigationItem = {
   label: string;
   path?: string;
   icon: LucideIcon;
-  disabled?: boolean;
   roles?: UserRole[];
 };
 
@@ -64,31 +57,6 @@ const navigationByPortal: Record<
       path: "/bank-admin/authorisations",
       icon: ShieldCheck,
     },
-    {
-      label: "Organisations",
-      icon: Building2,
-      disabled: true,
-    },
-    {
-      label: "Account Mapping",
-      icon: Link2,
-      disabled: true,
-    },
-    {
-      label: "MOP Management",
-      icon: UserRoundCheck,
-      disabled: true,
-    },
-    {
-      label: "Payment Processing",
-      icon: CircleDollarSign,
-      disabled: true,
-    },
-    {
-      label: "Exceptions",
-      icon: FileClock,
-      disabled: true,
-    },
   ],
 
   PLATFORM_ADMIN: [
@@ -103,34 +71,9 @@ const navigationByPortal: Record<
       icon: Store,
     },
     {
-      label: "Products",
-      icon: WalletCards,
-      disabled: true,
-    },
-    {
-      label: "Platform Users",
-      icon: Users,
-      disabled: true,
-    },
-    {
-      label: "Integrations",
-      icon: Link2,
-      disabled: true,
-    },
-    {
-      label: "Notifications",
-      icon: Bell,
-      disabled: true,
-    },
-    {
       label: "Audit Events",
       path: "/platform-admin/audit",
       icon: FileClock,
-    },
-    {
-      label: "Settings",
-      icon: Settings,
-      disabled: true,
     },
   ],
 
@@ -176,21 +119,6 @@ const navigationByPortal: Record<
       icon: UserRoundCheck,
       roles: ["CORPORATE_ADMIN"],
     },
-    {
-      label: "Reports",
-      icon: ReceiptText,
-      disabled: true,
-    },
-    {
-      label: "Notifications",
-      icon: Bell,
-      disabled: true,
-    },
-    {
-      label: "Administration",
-      icon: Settings,
-      disabled: true,
-    },
   ],
 };
 
@@ -204,7 +132,6 @@ function Sidebar({
 }: SidebarProps) {
   const navigationItems = navigationByPortal[portal].filter(
     (item) =>
-      !item.disabled &&
       item.path &&
       (!item.roles || item.roles.includes(user.role)),
   );

@@ -436,7 +436,7 @@ function ApprovalQueuePage() {
 
           <p className="mt-2 text-sm text-slate-600">
             Review beneficiary and payment requests
-            assigned to you under the applicable MOP.
+            assigned to you under the approval rule.
           </p>
         </div>
 
@@ -506,7 +506,7 @@ function ApprovalQueuePage() {
 
           <p className="mt-1 text-sm text-slate-500">
             Only requests where you are eligible under
-            the current MOP stage are displayed.
+            the current approval step are displayed.
           </p>
         </div>
 
@@ -519,7 +519,7 @@ function ApprovalQueuePage() {
                   "Reference",
                   "Request details",
                   "Amount",
-                  "MOP stage",
+                  "Approval step",
                   "Progress",
                   "Status",
                   "Action",
@@ -743,7 +743,7 @@ function ApprovalQueuePage() {
 
               <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                  Current MOP requirement
+                  Approval needed
                 </p>
 
                 <p className="mt-3 font-semibold text-blue-950">

@@ -716,7 +716,7 @@ function BeneficiariesPage() {
                 />
 
                 <DetailItem
-                  label="Current MOP stage"
+                  label="Current approval step"
                   value={
                     selectedBeneficiary.currentApprovalStageSequence
                       ? `Stage ${selectedBeneficiary.currentApprovalStageSequence} of ${selectedBeneficiary.totalApprovalStages}`
@@ -748,7 +748,7 @@ function BeneficiariesPage() {
                 />
 
                 <DetailItem
-                  label="Applied MOP version"
+                  label="Approval rule version"
                   value={
                     selectedBeneficiary.appliedMopVersion
                       ? `Version ${selectedBeneficiary.appliedMopVersion}`

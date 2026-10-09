@@ -13,10 +13,11 @@ const AUTH_STORAGE_KEY =
 function removePassword(
   user: MockUser,
 ): AuthenticatedUser {
-  const { password: _password, ...safeUser } =
-    user;
+  const safeUser: Partial<MockUser> = { ...user };
 
-  return safeUser;
+  delete safeUser.password;
+
+  return safeUser as AuthenticatedUser;
 }
 
 function getAvailableUsers(): MockUser[] {

@@ -1,14 +1,5 @@
-import {
-  Bell,
-  ChevronDown,
-  CircleHelp,
-  LogOut,
-  Menu,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
+import { ChevronDown, LogOut, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { portalThemes } from "../../design-system/portalTheme";
 import type {
   AuthenticatedUser,
   PortalType,
@@ -34,17 +25,14 @@ function getInitials(fullName: string) {
 }
 
 function Header({
-  portal,
   user,
   pageTitle,
   pageDescription,
-  pageSection,
   onOpenSidebar,
   onLogout,
 }: HeaderProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const theme = portalThemes[portal];
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -85,12 +73,6 @@ function Header({
           </button>
 
           <div className="min-w-0">
-            <div className="mb-1 hidden items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)] sm:flex">
-              <span>{theme.shortWorkspace}</span>
-              <span aria-hidden="true">/</span>
-              <span className="text-[var(--brand-primary)]">{pageSection}</span>
-            </div>
-
             <h1 className="truncate text-xl font-bold tracking-[-0.02em] text-[var(--text-primary)]">
               {pageTitle}
             </h1>
@@ -102,29 +84,6 @@ function Header({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="mr-1 hidden items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] xl:flex">
-            <ShieldCheck size={14} className="text-[var(--brand-primary)]" />
-            {theme.securityLabel}
-          </div>
-
-          <button
-            type="button"
-            className="hidden rounded-xl p-2.5 text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] sm:block"
-            aria-label="Help and support"
-          >
-            <CircleHelp size={20} />
-          </button>
-
-          <button
-            type="button"
-            className="relative rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-2.5 text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
-            aria-label="Notifications"
-          >
-            <Bell size={20} />
-
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--brand-primary)] ring-2 ring-[var(--surface-raised)]" />
-          </button>
-
           <div ref={profileMenuRef} className="relative">
             <button
               type="button"
@@ -177,15 +136,6 @@ function Header({
                     </p>
                   )}
                 </div>
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
-                >
-                  <UserRound size={17} />
-                  My profile
-                </button>
 
                 <button
                   type="button"

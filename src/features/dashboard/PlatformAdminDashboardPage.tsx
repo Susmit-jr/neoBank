@@ -8,6 +8,7 @@ import {
 import { useState } from "react";
 import { getDashboardSnapshot } from "../../services/dashboardService";
 import { useAuth } from "../../store/AuthContext";
+import AttentionBanner from "./AttentionBanner";
 import {
   EmptyRow,
   MetricGrid,
@@ -47,6 +48,12 @@ function PlatformAdminDashboardPage() {
           Refresh
         </button>
       </div>
+
+      <AttentionBanner
+        count={snapshot.awaitingNeoBank}
+        label="new application(s) waiting for your review"
+        to="/platform-admin/onboarding"
+      />
 
       <MetricGrid
         metrics={[

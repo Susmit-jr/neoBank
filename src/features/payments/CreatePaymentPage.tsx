@@ -332,7 +332,6 @@ function CreatePaymentPage() {
     setIsSubmitting(false);
   }
 }
-``
 
   const selectedAccount =
     preparationData.debitAccounts.find(
@@ -391,7 +390,7 @@ function CreatePaymentPage() {
 
         <p className="mt-4 text-sm leading-6 text-slate-600">
           The transaction has been routed to the eligible
-          authoriser according to the applicable MOP.
+          authoriser according to the approval rule.
         </p>
 
         <div className="mt-8 rounded-2xl bg-slate-50 p-5 text-left">
@@ -404,7 +403,7 @@ function CreatePaymentPage() {
           </p>
 
           <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Applied MOP
+            Approval rule
           </p>
 
           <p className="mt-2 text-sm font-semibold text-slate-900">
@@ -786,7 +785,7 @@ function CreatePaymentPage() {
               </h3>
 
               <p className="mt-1 text-sm text-slate-500">
-                The applicable MOP will be determined
+                The approval rule will be determined
                 when the payment is submitted.
               </p>
             </div>
@@ -919,7 +918,7 @@ function CreatePaymentPage() {
           </div>
 
             <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-                On submission, the active Payment MOP will be
+                On submission, your approval rule will be
                 applied and the transaction will be routed to
                 eligible authorisers. The payment will not be
                 processed until all required authorisations are

@@ -350,7 +350,7 @@ function CreateBeneficiaryPage() {
 
           <p className="mt-4 text-sm leading-6 text-slate-600">
             The request will appear in the approval tray of
-            eligible authorisers according to the applicable MOP.
+            eligible authorisers according to the approval rule.
           </p>
 
           <div className="mt-8 rounded-2xl bg-slate-50 p-5 text-left">
@@ -363,7 +363,7 @@ function CreateBeneficiaryPage() {
             </p>
 
             <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Applied MOP
+              Approval rule
             </p>
 
             <p className="mt-2 text-sm font-semibold text-slate-900">
@@ -622,7 +622,7 @@ function CreateBeneficiaryPage() {
 
               <p className="mt-1 text-sm text-slate-500">
                 The applicable approval flow will be determined
-                from the active MOP during submission.
+                from your approval rule during submission.
               </p>
             </div>
           </div>
@@ -686,7 +686,7 @@ function CreateBeneficiaryPage() {
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
             On submission, the beneficiary will be sent to the
-            eligible authoriser tray based on the active MOP. It
+            eligible authoriser tray based on your approval rule. It
             will not become active until all required
             authorisations are completed.
           </div>

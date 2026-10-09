@@ -100,7 +100,7 @@ const routeMetadata: Array<{
     matches: (portal, pathname) =>
       portal === "BANK_ADMIN" && pathname.includes("/onboarding"),
     meta: {
-      title: "Merchant onboarding",
+      title: "Applications",
       description: "Review organizations, controls and activation readiness",
       section: "Operations",
     },
@@ -111,14 +111,14 @@ const routeMetadata: Array<{
     meta: {
       title: "Onboarding application",
       description: "Review application data, controls and provisioning",
-      section: "Merchant onboarding",
+      section: "Applications",
     },
   },
   {
     matches: (portal, pathname) =>
       portal === "PLATFORM_ADMIN" && pathname.includes("/onboarding"),
     meta: {
-      title: "Merchant onboarding",
+      title: "Applications",
       description: "Manage the application pipeline and provisioning status",
       section: "Operations",
     },

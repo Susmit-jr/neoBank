@@ -765,7 +765,7 @@ function PaymentsPage() {
                 />
 
                 <DetailItem
-                  label="Applied MOP"
+                  label="Approval rule"
                   value={
                     selectedPayment.appliedMopVersion
                       ? `Version ${selectedPayment.appliedMopVersion}`
@@ -774,7 +774,7 @@ function PaymentsPage() {
                 />
 
                 <DetailItem
-                  label="MOP stage"
+                  label="Approval step"
                   value={
                     selectedPayment.currentApprovalStageSequence
                       ? `Stage ${selectedPayment.currentApprovalStageSequence} of ${selectedPayment.totalApprovalStages}`

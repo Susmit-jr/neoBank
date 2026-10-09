@@ -6,7 +6,7 @@ function PlatformAdminLayout() {
     <AppLayout
       portal="PLATFORM_ADMIN"
       pageTitle="Platform Administration"
-      pageDescription="Merchant onboarding, product and integration management"
+      pageDescription="Applications and platform activity"
     >
       <Outlet />
     </AppLayout>

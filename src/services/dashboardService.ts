@@ -21,6 +21,8 @@ export type DashboardSnapshot = {
   successRate: number | null;
   activeBusinessUsers: number;
   openApplications: number;
+  awaitingNeoBank: number;
+  awaitingBank: number;
   totalApplications: number;
   recentPayments: {
     id: string;
@@ -117,6 +119,12 @@ export function getDashboardSnapshot(): DashboardSnapshot {
           item.status !== "ACCOUNT_LINKED" &&
           item.status !== "REJECTED",
       ).length,
+    awaitingNeoBank: database.accountOpeningApplications.filter(
+      (item) => item.status === "SUBMITTED",
+    ).length,
+    awaitingBank: database.accountOpeningApplications.filter(
+      (item) => item.status === "SUBMITTED_TO_BANK",
+    ).length,
     totalApplications:
       database.accountOpeningApplications.length,
     recentPayments: [...payments]

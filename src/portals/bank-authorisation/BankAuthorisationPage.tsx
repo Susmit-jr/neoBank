@@ -859,7 +859,7 @@ useEffect(() => {
   )}
 
   <ReviewItem
-    label="Current MOP stage"
+    label="Current approval step"
     value={`${details.approvalStage.stageName} - Stage ${details.approvalStage.stageSequence}`}
   />
 

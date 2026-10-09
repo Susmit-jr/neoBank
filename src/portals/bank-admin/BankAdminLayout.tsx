@@ -6,7 +6,7 @@ function BankAdminLayout() {
     <AppLayout
       portal="BANK_ADMIN"
       pageTitle="Bank Administration"
-      pageDescription="Organisation, MOP, authorisation and processing oversight"
+      pageDescription="Applications, authorisations and payment oversight"
     >
       <Outlet />
     </AppLayout>

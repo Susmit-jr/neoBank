@@ -9,6 +9,7 @@ import { useState } from "react";
 import { getDashboardSnapshot } from "../../services/dashboardService";
 import { useAuth } from "../../store/AuthContext";
 import { formatCurrency } from "../../utils/currency";
+import AttentionBanner from "./AttentionBanner";
 import {
   EmptyRow,
   MetricGrid,
@@ -43,6 +44,12 @@ function BankAdminDashboardPage() {
           Refresh
         </button>
       </div>
+
+      <AttentionBanner
+        count={snapshot.awaitingBank}
+        label="application(s) from X Corp waiting for your approval"
+        to="/bank-admin/onboarding"
+      />
 
       <MetricGrid
         metrics={[

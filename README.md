@@ -1,75 +1,33 @@
-# React + TypeScript + Vite
+# X Corp neobank prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A clickable prototype of a neobank (X Corp) running on top of IndusInd Bank. It shows the complete journey a business goes through, from opening an account to making a payment that several checkers authorise on a secure bank window.
 
-Currently, two official plugins are available:
+Everything runs in the browser on sample data (saved in `localStorage`); there is no backend.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run it
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+corepack enable
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Open http://localhost:8443. Use **Log in as** at the top right of the home page; every sign-in panel lists its demo credentials.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## The journey
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Apply** (public, `/apply`): a business fills a five-step application. *Fill sample data* completes it.
+2. **X Corp reviews** (NeoBank Admin, Applications): verify and send to the bank, or reject with a reason.
+3. **IndusInd Bank approves** (Bank Admin, Applications): approving opens the account and activates the business.
+4. **Track** (public, `/track`): the applicant checks progress with their reference and email, and collects the logins for their team.
+5. **Business Banking** (Maker, Checker 1, Checker 2): add beneficiaries and make payments. A maker prepares; checkers authorise in any order.
+6. **Authorise on the bank window**: each checker signs in to the IndusInd Bank window (credentials plus OTP `123456`), sees only that transaction, and approves. The payment moves on once every required checker has approved.
 
-```
+Rules built in: a rejection cancels the transaction for good; a maker can cancel before any checker acts; an unfinished bank window can be resumed; sessions expire after 10 minutes; a new beneficiary is limited to ₹10,000 for the first hour.
+
+## Code map
+
+- `src/features` screens grouped by area (authentication, onboarding, payments, beneficiaries, approvals, dashboard, audit, mop)
+- `src/portals` layouts per portal and the bank authorisation window
+- `src/services` the business logic, run against `mockDatabase`
+- `src/mock-data` seed data; bump `DATABASE_VERSION` in `src/services/mockDatabase.ts` to reset everyone's browser data
