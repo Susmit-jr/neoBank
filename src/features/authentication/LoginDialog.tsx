@@ -85,7 +85,13 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [portal, setPortal] = useState<PortalType>(initialPortal);
+  const [group, setGroup] = useState<"BUSINESS" | "ADMIN">(
+    initialPortal === "MERCHANT" ? "BUSINESS" : "ADMIN",
+  );
+  const [adminPortal, setAdminPortal] = useState<PortalType>(
+    initialPortal === "BANK_ADMIN" ? "BANK_ADMIN" : "PLATFORM_ADMIN",
+  );
+  const portal: PortalType = group === "BUSINESS" ? "MERCHANT" : adminPortal;
   const [entered, setEntered] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -109,8 +115,7 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [onClose]);
 
-  function choose(next: PortalType) {
-    setPortal(next);
+  function reset() {
     setUsername("");
     setPassword("");
     setError("");
@@ -153,7 +158,7 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
       />
 
       <div
-        className={`relative max-h-[94vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white shadow-2xl transition duration-300 ${entered ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
+        className={`relative flex max-h-[96vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-white shadow-2xl transition duration-300 ${entered ? "scale-100 opacity-100" : "scale-95 opacity-0"}`}
       >
         <div className="flex items-center justify-between bg-[var(--brand-primary)] px-7 py-5 text-white transition-colors duration-300">
           {portal === "BANK_ADMIN" ? (
@@ -181,24 +186,24 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
           </button>
         </div>
 
-        <div className="px-7 py-6">
-          <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950">
-            Log in
-          </h2>
-
-          <fieldset className="mt-5">
-            <legend className="text-sm font-semibold text-slate-700">
+        <div className="flex min-h-0 flex-1 flex-col px-7 py-5">
+          <fieldset>
+            <legend className="text-2xl font-bold tracking-[-0.03em] text-slate-950">
               Log in as
             </legend>
 
-            <div className="mt-3 grid gap-2.5" role="radiogroup">
-              {options.map((option) => {
-                const Icon = option.icon;
-                const active = option.portal === portal;
+            <div className="mt-4 grid grid-cols-2 gap-3" role="radiogroup">
+              {(
+                [
+                  ["BUSINESS", "Business Banking", Store],
+                  ["ADMIN", "Admin", Landmark],
+                ] as const
+              ).map(([value, label, Icon]) => {
+                const active = group === value;
 
                 return (
                   <label
-                    key={option.portal}
+                    key={value}
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition ${
                       active
                         ? "border-[var(--brand-primary)] bg-[var(--brand-soft)]"
@@ -208,30 +213,17 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
                     <input
                       type="radio"
                       name="login-as"
-                      value={option.portal}
+                      value={value}
                       checked={active}
-                      onChange={() => choose(option.portal)}
+                      onChange={() => {
+                        setGroup(value);
+                        reset();
+                      }}
                       className="sr-only"
                     />
 
                     <span
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white"
-                      style={{ backgroundColor: option.swatch }}
-                    >
-                      <Icon size={19} />
-                    </span>
-
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-slate-950">
-                        {option.title}
-                      </span>
-                      <span className="block text-xs text-slate-500">
-                        {option.description}
-                      </span>
-                    </span>
-
-                    <span
-                      className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                         active
                           ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white"
                           : "border-slate-300"
@@ -239,13 +231,37 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
                     >
                       {active && <Check size={13} strokeWidth={3} />}
                     </span>
+
+                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+                      <Icon size={16} className="text-[var(--brand-primary)]" />
+                      {label}
+                    </span>
                   </label>
                 );
               })}
             </div>
+
+            {group === "ADMIN" && (
+              <label className="mt-3 block">
+                <span className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  Admin type
+                </span>
+                <select
+                  value={adminPortal}
+                  onChange={(event) => {
+                    setAdminPortal(event.target.value as PortalType);
+                    reset();
+                  }}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[var(--brand-primary)] focus:ring-4 focus:ring-[var(--focus-ring)]"
+                >
+                  <option value="PLATFORM_ADMIN">NeoBank Admin</option>
+                  <option value="BANK_ADMIN">Bank Admin</option>
+                </select>
+              </label>
+            )}
           </fieldset>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
             {error && (
               <div
                 role="alert"
@@ -309,12 +325,12 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
             </button>
           </form>
 
-          <div className="mt-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-3">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]">
               Demo credentials
             </p>
 
-            <ul className="mt-2 space-y-1.5">
+            <ul className="mt-2 max-h-28 space-y-1.5 overflow-y-auto pr-1">
               {selected.demos.map((demo) => (
                 <li
                   key={demo.username}
