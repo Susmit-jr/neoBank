@@ -18,6 +18,7 @@ import {
   type SubmitEvent,
 } from "react";
 import { useParams } from "react-router-dom";
+import { getMockDatabase } from "../../services/mockDatabase";
 import {
   approvePaymentThroughBank,
   approveThroughBank,
@@ -42,8 +43,19 @@ const returnUrl =
     "return",
   ) ?? "/merchant/approvals";
 
+// Shown inside an overlay on the NeoBank page, or in a popup window, or alone in a tab.
+const isEmbedded = window.parent !== window;
+const parentWindow: Window | null = isEmbedded
+  ? window.parent
+  : window.opener;
+
 function closeOrReturn() {
-  if (window.opener) {
+  if (isEmbedded) {
+    window.parent.postMessage(
+      { source: "NEOBANK_BANK_AUTHORISATION", type: "CLOSE" },
+      window.location.origin,
+    );
+  } else if (window.opener) {
     window.close();
   } else {
     window.location.assign(returnUrl);
@@ -54,11 +66,11 @@ function postResultToParent(
   status: string,
   message: string,
 ) {
-  if (!window.opener) {
+  if (!parentWindow) {
     return;
   }
 
-  window.opener.postMessage(
+  parentWindow.postMessage(
     {
       source: "NEOBANK_BANK_AUTHORISATION",
       status,
@@ -174,7 +186,7 @@ useEffect(() => {
 
 useEffect(() => {
   const parentWindowCheck = window.setInterval(() => {
-    if (window.opener?.closed) {
+    if (!isEmbedded && window.opener?.closed) {
       window.clearInterval(parentWindowCheck);
 
       setError(
@@ -240,6 +252,15 @@ useEffect(() => {
       setIsSubmitting(false);
     }
   }
+
+  // The bank user who matches the NeoBank checker that started this session.
+  const demoBankUser = details
+    ? getMockDatabase().bankUsers.find(
+        (item) =>
+          item.platformUserId ===
+          details.session.platformUserId,
+      )
+    : undefined;
 
   const expiresAt = details?.session.expiresAt;
   const [now, setNow] = useState(() => Date.now());
@@ -459,9 +480,21 @@ useEffect(() => {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-5 sm:p-8">
-      <section className="mx-auto max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
-        <header className="bg-slate-950 p-6 text-white">
+    <main
+      className={
+        isEmbedded
+          ? "min-h-screen bg-white"
+          : "min-h-screen bg-slate-100 p-5 sm:p-8"
+      }
+    >
+      <section
+        className={
+          isEmbedded
+            ? "overflow-hidden bg-white"
+            : "mx-auto max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
+        }
+      >
+        <header className="bg-slate-950 p-6 pr-14 text-white">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
               <Landmark size={24} />
@@ -584,17 +617,35 @@ useEffect(() => {
               Authenticate
             </button>
 
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
-              Demo credentials for checker1:
-              <br />
-              Corporate ID: <strong>ACME001</strong>
-              <br />
-              Bank User ID:{" "}
-              <strong>bankchecker01</strong>
-              <br />
-              Password:{" "}
-              <strong>BankChecker@123</strong>
-            </div>
+            {demoBankUser && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
+                <p className="font-semibold uppercase tracking-wide">
+                  Demo credentials for {demoBankUser.fullName}
+                </p>
+                <p className="mt-2">
+                  Corporate ID:{" "}
+                  <strong>{demoBankUser.corporateId}</strong>
+                  <br />
+                  Bank User ID:{" "}
+                  <strong>{demoBankUser.bankUserId}</strong>
+                  <br />
+                  Password:{" "}
+                  <strong>{demoBankUser.password}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCorporateId(demoBankUser.corporateId);
+                    setBankUserId(demoBankUser.bankUserId);
+                    setPassword(demoBankUser.password);
+                    setError("");
+                  }}
+                  className="mt-3 rounded-lg border border-blue-700 px-3 py-1.5 text-xs font-semibold text-blue-800 transition hover:bg-blue-700 hover:text-white"
+                >
+                  Use these credentials
+                </button>
+              </div>
+            )}
           </form>
         )}
 

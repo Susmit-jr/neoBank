@@ -111,6 +111,11 @@ function ApprovalQueuePage() {
   const [isRejecting, setIsRejecting] =
     useState(false);
 
+  // The bank authorisation opens as an overlay on this page.
+  const [bankSessionId, setBankSessionId] = useState<
+    string | null
+  >(null);
+
   // Re-evaluate unfinished bank sessions when the user comes back to this tab.
   const [, setFocusTick] = useState(0);
 
@@ -133,7 +138,7 @@ function ApprovalQueuePage() {
       return;
     }
 
-    setIsLoading(true);
+    // Refreshes are silent so an open bank overlay is not torn down.
     setError("");
 
     try {
@@ -216,6 +221,12 @@ function ApprovalQueuePage() {
         return;
       }
 
+      if (event.data?.type === "CLOSE") {
+        setBankSessionId(null);
+        void loadApprovals();
+        return;
+      }
+
       const message =
         typeof event.data?.message === "string"
           ? event.data.message
@@ -293,47 +304,7 @@ function ApprovalQueuePage() {
             user.id,
           );
 
-    const popupWidth = 620;
-    const popupHeight = 780;
-
-    const popupLeft =
-      window.screenX +
-      Math.max(
-        0,
-        (window.outerWidth - popupWidth) / 2,
-      );
-
-    const popupTop =
-      window.screenY +
-      Math.max(
-        0,
-        (window.outerHeight - popupHeight) / 2,
-      );
-
-    const bankPopup = window.open(
-      `/bank-authorisation/${session.id}`,
-      `bank-authorisation-${session.id}`,
-      [
-        `width=${popupWidth}`,
-        `height=${popupHeight}`,
-        `left=${popupLeft}`,
-        `top=${popupTop}`,
-        "resizable=yes",
-        "scrollbars=yes",
-      ].join(","),
-    );
-
-    if (!bankPopup) {
-      // Popup blocked or unsupported (e.g. mobile): continue in this tab.
-      window.location.assign(
-        `/bank-authorisation/${session.id}?return=${encodeURIComponent(
-          window.location.pathname,
-        )}`,
-      );
-      return;
-    }
-
-    bankPopup.focus();
+    setBankSessionId(session.id);
 
     void loadApprovals();
   } catch (authorisationError) {
@@ -850,6 +821,30 @@ function ApprovalQueuePage() {
             </div>
           </aside>
         </>
+      )}
+
+      {bankSessionId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <div className="relative h-[40rem] max-h-[94vh] w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <iframe
+              title="IndusInd Bank authorisation"
+              src={`/bank-authorisation/${bankSessionId}`}
+              className="h-full w-full border-0"
+            />
+
+            <button
+              type="button"
+              aria-label="Close bank window"
+              onClick={() => {
+                setBankSessionId(null);
+                void loadApprovals();
+              }}
+              className="absolute right-3 top-3 rounded-lg bg-white/10 p-1.5 text-white transition hover:bg-white/25"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
       )}
 
       {isRejectModalOpen && selectedItem && (
