@@ -269,7 +269,7 @@ function ApplyPage() {
 
           <p className="mt-3 text-sm leading-6 text-slate-600">
             Thank you, {application.applicant.fullName}. X Corp will review
-            your application and send it to IndusInd Bank. Keep your reference
+            your application and get your account ready. Keep your reference
             to check progress and collect your logins.
           </p>
 
@@ -1020,7 +1020,7 @@ function ApplyPage() {
               />
               I confirm that the information is correct and I am authorised to
               apply on behalf of this company. I agree that X Corp may share it
-              with IndusInd Bank to open the account.
+              with its banking partners to open the account.
             </label>
           </div>
         )}

@@ -1,48 +1,23 @@
 import {
   ArrowRight,
-  Building2,
   CheckCircle2,
-  ChevronDown,
-  Landmark,
   LayoutDashboard,
   Send,
   ShieldCheck,
-  Store,
   Users,
   Wallet,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import LoginPanel from "./LoginPanel";
 import type { PortalType } from "../../types/auth";
-
-const loginOptions = [
-  {
-    title: "Business Banking",
-    description: "Accounts, payments and approvals for your company",
-    portal: "MERCHANT",
-    icon: Store,
-  },
-  {
-    title: "NeoBank Admin",
-    description: "X Corp onboarding and platform operations",
-    portal: "PLATFORM_ADMIN",
-    icon: Building2,
-  },
-  {
-    title: "Bank Admin",
-    description: "IndusInd Bank operations and oversight",
-    portal: "BANK_ADMIN",
-    icon: Landmark,
-  },
-] as const;
+import LoginDialog from "./LoginDialog";
 
 const features = [
   {
     icon: Wallet,
     title: "Accounts and balances",
     description:
-      "Real-time view of every current account, balance and transaction in one place.",
+      "Real-time view of every account, balance and transaction in one place.",
   },
   {
     icon: Send,
@@ -54,13 +29,13 @@ const features = [
     icon: Users,
     title: "Maker and checker control",
     description:
-      "Every beneficiary and payment is authorised by the approvers your company nominates.",
+      "Every beneficiary and payment is approved by the people your company nominates.",
   },
   {
     icon: ShieldCheck,
-    title: "Bank-grade authorisation",
+    title: "Secure authorisation",
     description:
-      "Approvers confirm each transaction on a secure IndusInd Bank window with a one-time password.",
+      "Approvers confirm each transaction in a protected window with a one-time password.",
   },
 ] as const;
 
@@ -70,9 +45,9 @@ function PortalSelectionPage({
   openPortal?: PortalType | null;
 }) {
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [loginPortal, setLoginPortal] =
-    useState<PortalType | null>(openPortal);
+  const [loginPortal, setLoginPortal] = useState<PortalType | null>(
+    openPortal,
+  );
 
   useEffect(() => {
     setLoginPortal(openPortal);
@@ -82,26 +57,6 @@ function PortalSelectionPage({
     setLoginPortal(null);
     navigate("/", { replace: true });
   }
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function closeOnOutsideClick(event: MouseEvent) {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", closeOnOutsideClick);
-
-    return () =>
-      document.removeEventListener(
-        "mousedown",
-        closeOnOutsideClick,
-      );
-  }, []);
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -123,62 +78,31 @@ function PortalSelectionPage({
             <a href="#security" className="hover:text-slate-950">
               Security
             </a>
-            <a href="#partner" className="hover:text-slate-950">
-              Our banking partner
-            </a>
-          </nav>
-
-          <div className="relative" ref={menuRef}>
             <button
               type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+              onClick={() => navigate("/track")}
+              className="hover:text-slate-950"
             >
-              Log in as
-              <ChevronDown
-                size={16}
-                className={`transition-transform ${menuOpen ? "rotate-180" : ""}`}
-              />
+              Track application
+            </button>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/apply")}
+              className="hidden rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:block"
+            >
+              Open an account
             </button>
 
-            {menuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 mt-3 w-80 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl shadow-slate-950/10"
-              >
-                {loginOptions.map((option) => {
-                  const Icon = option.icon;
-
-                  return (
-                    <button
-                      key={option.title}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setLoginPortal(option.portal);
-                      }}
-                      className="flex w-full items-start gap-3 rounded-xl p-3 text-left transition hover:bg-slate-50"
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                        <Icon size={19} />
-                      </span>
-
-                      <span>
-                        <span className="block text-sm font-semibold text-slate-950">
-                          {option.title}
-                        </span>
-                        <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                          {option.description}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => setLoginPortal("MERCHANT")}
+              className="rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Log in
+            </button>
           </div>
         </div>
       </header>
@@ -190,7 +114,7 @@ function PortalSelectionPage({
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
               <ShieldCheck size={14} />
-              Banking partner: IndusInd Bank
+              Business banking, made simple
             </span>
 
             <h1 className="mt-6 text-4xl font-bold leading-[1.08] tracking-[-0.04em] sm:text-5xl lg:text-6xl">
@@ -198,8 +122,8 @@ function PortalSelectionPage({
             </h1>
 
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-              Manage accounts, pay vendors and approve transactions
-              with your team, on one secure platform built for growing
+              Open an account online, pay vendors and approve transactions with
+              your team, all on one secure platform built for growing
               companies.
             </p>
 
@@ -221,15 +145,7 @@ function PortalSelectionPage({
                 onClick={() => setLoginPortal("MERCHANT")}
                 className="rounded-xl border border-slate-300 px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                Log in to Business Banking
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/track")}
-                className="text-sm font-semibold text-blue-700 hover:text-blue-800"
-              >
-                Track your application
+                Log in
               </button>
             </div>
 
@@ -243,8 +159,8 @@ function PortalSelectionPage({
                 <dd className="mt-1 text-xl font-bold">Multi-checker</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Support</dt>
-                <dd className="mt-1 text-xl font-bold">24 × 7</dd>
+                <dt className="text-xs text-slate-500">Account opening</dt>
+                <dd className="mt-1 text-xl font-bold">100% online</dd>
               </div>
             </dl>
           </div>
@@ -284,7 +200,11 @@ function PortalSelectionPage({
               <div className="mt-5 space-y-3">
                 {[
                   ["Orbit Technologies LLP", "₹2,75,000", "Paid"],
-                  ["Maharashtra Power Services", "₹12,50,000", "2 approvals left"],
+                  [
+                    "Maharashtra Power Services",
+                    "₹12,50,000",
+                    "1 approval left",
+                  ],
                 ].map(([name, amount, status]) => (
                   <div
                     key={name}
@@ -307,7 +227,7 @@ function PortalSelectionPage({
               <div>
                 <p className="text-sm font-semibold">Payment authorised</p>
                 <p className="text-xs text-slate-500">
-                  Confirmed securely with IndusInd Bank
+                  Approved by 2 of 2 checkers
                 </p>
               </div>
             </div>
@@ -351,16 +271,16 @@ function PortalSelectionPage({
               Every payment is approved the way your company decides.
             </h2>
             <p className="mt-5 max-w-lg leading-7 text-slate-300">
-              Makers prepare payments. Your nominated checkers authorise
-              them on a secure IndusInd Bank window, in any order, and
-              only then is the payment sent.
+              Makers prepare payments. Your nominated checkers authorise them
+              in a protected window, in any order, and only then is the payment
+              sent.
             </p>
           </div>
 
           <ol className="space-y-4">
             {[
-              "A maker adds a beneficiary or initiates a payment",
-              "Checkers authorise through the bank's secure window with OTP",
+              "A maker adds a beneficiary or starts a payment",
+              "Checkers authorise it with their credentials and a one-time password",
               "The payment is sent once every required checker has approved",
             ].map((step, index) => (
               <li
@@ -379,41 +299,47 @@ function PortalSelectionPage({
         </div>
       </section>
 
-      <section id="partner" className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
         <div className="flex flex-col items-start justify-between gap-6 rounded-3xl border border-slate-200 bg-slate-50 p-8 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-800 text-white">
-              <Landmark size={26} />
-            </span>
-            <div>
-              <p className="text-lg font-bold">Banking partner: IndusInd Bank</p>
-              <p className="mt-1 text-sm text-slate-600">
-                Your accounts are held with IndusInd Bank. X Corp provides
-                the platform.
-              </p>
-            </div>
+          <div>
+            <p className="text-2xl font-bold tracking-[-0.02em]">
+              Ready to open your business account?
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Apply online in a few minutes and track your application at any
+              time.
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/apply")}
-            className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-          >
-            Open a business account
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/apply")}
+              className="rounded-xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800"
+            >
+              Open a business account
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/track")}
+              className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-white"
+            >
+              Track application
+            </button>
+          </div>
         </div>
       </section>
 
       <footer className="border-t border-slate-200">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-3 px-5 py-8 text-xs text-slate-500 sm:flex-row sm:px-8">
-          <p>© 2026 X Corp. Banking services provided by IndusInd Bank.</p>
+          <p>© 2026 X Corp. All rights reserved.</p>
           <p>Privacy · Security · Support</p>
         </div>
       </footer>
+
       {loginPortal && (
-        <LoginPanel
-          key={loginPortal}
-          portal={loginPortal}
+        <LoginDialog
+          initialPortal={loginPortal}
           onClose={closeLogin}
         />
       )}

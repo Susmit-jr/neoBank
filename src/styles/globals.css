@@ -27,6 +27,18 @@
   --selection: #dce7ff;
 }
 
+/* NeoBank Admin */
+[data-portal="PLATFORM_ADMIN"] {
+  --brand-primary: #4338ca;
+  --brand-strong: #3730a3;
+  --brand-soft: #eef0ff;
+  --sidebar-mark: var(--brand-primary);
+  --sidebar-active: var(--brand-soft);
+  --sidebar-active-text: var(--brand-primary);
+  --focus-ring: rgba(67, 56, 202, 0.2);
+  --selection: #e0e3ff;
+}
+
 /* IndusInd Bank */
 [data-portal="BANK_ADMIN"] {
   --app-canvas: #faf6f6;

@@ -28,7 +28,7 @@ import ApplyPage from "../features/onboarding/ApplyPage";
 import TrackPage from "../features/onboarding/TrackPage";
 import ApplicationQueuePage from "../features/onboarding/ApplicationQueuePage";
 import ApplicationReviewPage from "../features/onboarding/ApplicationReviewPage";
-import MopPage from "../features/mop/MopPage";
+import OrganisationPage from "../features/organisation/OrganisationPage";
 import AuditPage from "../features/audit/AuditPage";
 import BankAuthorisationsPage from "../features/authorisations/BankAuthorisationsPage";
 import PaymentsPage from "../features/payments/PaymentsPage";
@@ -239,8 +239,8 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "approval-rules",
-        element: <MopPage />,
+        path: "organisation",
+        element: <OrganisationPage />,
       },
       {
         path: "approvals",

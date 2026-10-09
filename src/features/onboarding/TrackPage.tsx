@@ -65,10 +65,10 @@ function TrackPage() {
   const stages = [
     ["Application submitted", application?.submittedAt],
     [
-      "Reviewed by X Corp",
+      "Verified by X Corp",
       application?.neoBankReview.reviewCompletedAt,
     ],
-    ["Approved by IndusInd Bank", application?.bankReview.reviewCompletedAt],
+    ["Final approval", application?.bankReview.reviewCompletedAt],
     ["Account opened", application?.openedAccount?.openedOrLinkedAt],
   ] as const;
 

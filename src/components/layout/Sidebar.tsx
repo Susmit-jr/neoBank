@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Building2,
   ChevronLeft,
   CircleDollarSign,
   FileClock,
@@ -9,7 +10,6 @@ import {
   ShieldCheck,
   Store,
   Users,
-  UserRoundCheck,
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -115,10 +115,9 @@ const navigationByPortal: Record<
         ],
     },
     {
-      label: "Approval rules",
-      path: "/merchant/approval-rules",
-      icon: UserRoundCheck,
-      roles: ["CORPORATE_ADMIN"],
+      label: "Organisation",
+      path: "/merchant/organisation",
+      icon: Building2,
     },
   ],
 };
