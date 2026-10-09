@@ -1,3 +1,4 @@
+import OtpDialog from "../../components/status/OtpDialog";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -116,8 +117,7 @@ function CreateBeneficiaryPage() {
     useState(false);
   const [createdReference, setCreatedReference] =
     useState("");
-  const [appliedMopSummary, setAppliedMopSummary] =
-    useState("");
+  const [otpOpen, setOtpOpen] = useState(false);
 
   const canCreateBeneficiary =
     user?.role === "MAKER" ||
@@ -288,10 +288,6 @@ function CreateBeneficiaryPage() {
         result.beneficiary.beneficiaryReference,
       );
 
-      setAppliedMopSummary(
-        `${result.appliedMop.mopReference}, Version ${result.appliedMop.version}, ${result.appliedMop.stages.length} approval stage(s)`,
-      );
-
       setStep("SUCCESS");
     } catch (submissionError) {
       if (submissionError instanceof Error) {
@@ -349,8 +345,8 @@ function CreateBeneficiaryPage() {
           </h2>
 
           <p className="mt-4 text-sm leading-6 text-slate-600">
-            The request will appear in the approval tray of
-            eligible authorisers according to the approval rule.
+            The request will appear in the approval tray of your
+            authorisers.
           </p>
 
           <div className="mt-8 rounded-2xl bg-slate-50 p-5 text-left">
@@ -362,13 +358,6 @@ function CreateBeneficiaryPage() {
               {createdReference}
             </p>
 
-            <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Approval rule
-            </p>
-
-            <p className="mt-2 text-sm font-semibold text-slate-900">
-              {appliedMopSummary}
-            </p>
 
             <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
               Current status
@@ -621,8 +610,7 @@ function CreateBeneficiaryPage() {
               </h3>
 
               <p className="mt-1 text-sm text-slate-500">
-                The applicable approval flow will be determined
-                from your approval rule during submission.
+                Check the details, then submit with an OTP.
               </p>
             </div>
           </div>
@@ -685,9 +673,8 @@ function CreateBeneficiaryPage() {
           </div>
 
           <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-            On submission, the beneficiary will be sent to the
-            eligible authoriser tray based on your approval rule. It
-            will not become active until all required
+            On submission, the beneficiary will be sent for
+            authorisation. It will not become active until all required
             authorisations are completed.
           </div>
 
@@ -705,7 +692,7 @@ function CreateBeneficiaryPage() {
 
             <button
               type="button"
-              onClick={() => void handleSubmission()}
+              onClick={() => setOtpOpen(true)}
               disabled={isSubmitting}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -724,6 +711,17 @@ function CreateBeneficiaryPage() {
             </button>
           </div>
         </article>
+      )}
+
+      {otpOpen && (
+        <OtpDialog
+          title="submit this beneficiary"
+          onVerified={() => {
+            setOtpOpen(false);
+            void handleSubmission();
+          }}
+          onCancel={() => setOtpOpen(false)}
+        />
       )}
     </section>
   );

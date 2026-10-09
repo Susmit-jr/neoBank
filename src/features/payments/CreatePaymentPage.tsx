@@ -1,3 +1,4 @@
+import OtpDialog from "../../components/status/OtpDialog";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -100,8 +101,7 @@ function CreatePaymentPage() {
     const [submissionMessage, setSubmissionMessage] =
   useState("");
 
-    const [appliedMopSummary, setAppliedMopSummary] =
-  useState("");
+    const [otpOpen, setOtpOpen] = useState(false);
 
     const [error, setError] = useState("");
 
@@ -317,10 +317,6 @@ function CreatePaymentPage() {
 
     setSubmissionMessage(result.message);
 
-    setAppliedMopSummary(
-      `${result.appliedMop.mopReference}, Version ${result.appliedMop.version}, ${result.appliedMop.stages.length} approval stage(s)`,
-    );
-
     setStep("SUCCESS");
   } catch (submissionError) {
     setError(
@@ -389,8 +385,7 @@ function CreatePaymentPage() {
         </h2>
 
         <p className="mt-4 text-sm leading-6 text-slate-600">
-          The transaction has been routed to the eligible
-          authoriser according to the approval rule.
+          The transaction has been sent to your authorisers.
         </p>
 
         <div className="mt-8 rounded-2xl bg-slate-50 p-5 text-left">
@@ -402,13 +397,6 @@ function CreatePaymentPage() {
             {submittedPaymentReference}
           </p>
 
-          <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Approval rule
-          </p>
-
-          <p className="mt-2 text-sm font-semibold text-slate-900">
-            {appliedMopSummary}
-          </p>
 
           <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Current status
@@ -452,7 +440,6 @@ function CreatePaymentPage() {
               setError("");
               setSubmittedPaymentReference("");
               setSubmissionMessage("");
-              setAppliedMopSummary("");
               setStep("ENTRY");
             }}
             className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -785,8 +772,7 @@ function CreatePaymentPage() {
               </h3>
 
               <p className="mt-1 text-sm text-slate-500">
-                The approval rule will be determined
-                when the payment is submitted.
+                Check the details, then submit with an OTP.
               </p>
             </div>
           </div>
@@ -918,11 +904,9 @@ function CreatePaymentPage() {
           </div>
 
             <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm leading-6 text-blue-900">
-                On submission, your approval rule will be
-                applied and the transaction will be routed to
-                eligible authorisers. The payment will not be
-                processed until all required authorisations are
-                completed.
+                On submission, the transaction will be sent for
+                authorisation. The payment will not be processed
+                until all required authorisations are completed.
             </div>
 
           <div className="mt-8 flex flex-col justify-end gap-3 sm:flex-row">
@@ -939,7 +923,7 @@ function CreatePaymentPage() {
 
             <button
   type="button"
-  onClick={() => void handleSubmission()}
+  onClick={() => setOtpOpen(true)}
   disabled={isSubmitting}
   className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
 >
@@ -959,6 +943,17 @@ function CreatePaymentPage() {
 
           </div>
         </article>
+      )}
+
+      {otpOpen && (
+        <OtpDialog
+          title="submit this payment"
+          onVerified={() => {
+            setOtpOpen(false);
+            void handleSubmission();
+          }}
+          onCancel={() => setOtpOpen(false)}
+        />
       )}
     </section>
   );

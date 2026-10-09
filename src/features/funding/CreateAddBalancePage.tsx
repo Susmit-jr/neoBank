@@ -1,5 +1,6 @@
 import { useState, type SubmitEvent } from "react";
 import { ArrowLeft, CheckCircle2, LoaderCircle } from "lucide-react";
+import OtpDialog from "../../components/status/OtpDialog";
 import { useNavigate } from "react-router-dom";
 import { getMockDatabase } from "../../services/mockDatabase";
 import {
@@ -37,6 +38,7 @@ function CreateAddBalancePage() {
   const [step, setStep] = useState<"FORM" | "REVIEW" | "DONE">("FORM");
   const [error, setError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [otpOpen, setOtpOpen] = useState(false);
   const [created, setCreated] = useState<FundingRequest | null>(null);
 
   const amountValue = Number(amount.replaceAll(",", ""));
@@ -269,13 +271,24 @@ function CreateAddBalancePage() {
           <button
             type="button"
             disabled={isBusy}
-            onClick={() => void handleSubmit()}
+            onClick={() => setOtpOpen(true)}
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--brand-strong)] disabled:opacity-60"
           >
             {isBusy && <LoaderCircle size={18} className="animate-spin" />}
             Submit for authorisation
           </button>
         </div>
+      )}
+
+      {otpOpen && (
+        <OtpDialog
+          title="submit this request"
+          onVerified={() => {
+            setOtpOpen(false);
+            void handleSubmit();
+          }}
+          onCancel={() => setOtpOpen(false)}
+        />
       )}
     </section>
   );
