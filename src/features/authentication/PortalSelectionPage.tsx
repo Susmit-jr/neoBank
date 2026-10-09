@@ -206,22 +206,31 @@ function PortalSelectionPage({
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <button
                 type="button"
-                onClick={() => setLoginPortal("MERCHANT")}
+                onClick={() => navigate("/apply")}
                 className="group flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-700/25 transition hover:bg-blue-800"
               >
-                Log in to Business Banking
+                Open a business account
                 <ArrowRight
                   size={17}
                   className="transition-transform group-hover:translate-x-1"
                 />
               </button>
 
-              <a
-                href="#features"
+              <button
+                type="button"
+                onClick={() => setLoginPortal("MERCHANT")}
                 className="rounded-xl border border-slate-300 px-6 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
-                See what you can do
-              </a>
+                Log in to Business Banking
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/track")}
+                className="text-sm font-semibold text-blue-700 hover:text-blue-800"
+              >
+                Track your application
+              </button>
             </div>
 
             <dl className="mt-12 grid max-w-xl grid-cols-3 gap-6 border-t border-slate-200 pt-8">
@@ -387,10 +396,10 @@ function PortalSelectionPage({
 
           <button
             type="button"
-            onClick={() => setLoginPortal("MERCHANT")}
+            onClick={() => navigate("/apply")}
             className="rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
-            Log in to Business Banking
+            Open a business account
           </button>
         </div>
       </section>

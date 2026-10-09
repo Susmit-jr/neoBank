@@ -24,20 +24,34 @@ import CreateBeneficiaryPage from "../features/beneficiaries/CreateBeneficiaryPa
 
 import ApprovalQueuePage from "../features/approvals/ApprovalQueuePage";
 
+import ApplyPage from "../features/onboarding/ApplyPage";
+import TrackPage from "../features/onboarding/TrackPage";
+import ApplicationQueuePage from "../features/onboarding/ApplicationQueuePage";
+import ApplicationReviewPage from "../features/onboarding/ApplicationReviewPage";
 import MopPage from "../features/mop/MopPage";
 import AuditPage from "../features/audit/AuditPage";
 import BankAuthorisationsPage from "../features/authorisations/BankAuthorisationsPage";
 import PaymentsPage from "../features/payments/PaymentsPage";
 import CreatePaymentPage from "../features/payments/CreatePaymentPage";
 
-import AccountOpeningApplicationPage from "../features/onboarding/AccountOpeningApplicationPage";
-import NeoBankOnboardingQueuePage from "../features/onboarding/NeoBankOnboardingQueuePage";
-import BankAdminOnboardingPage from "../features/onboarding/BankAdminOnboardingPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <PortalSelectionPage />,
+  },
+
+  {
+    path: "/apply",
+    element: <ApplyPage />,
+  },
+  {
+    path: "/apply/:applicationId",
+    element: <ApplyPage />,
+  },
+  {
+    path: "/track",
+    element: <TrackPage />,
   },
 
   {
@@ -81,7 +95,21 @@ export const router = createBrowserRouter([
       },
       {
         path: "onboarding",
-        element: <BankAdminOnboardingPage />,
+        element: (
+          <ApplicationQueuePage
+            reviewer="BANK"
+            basePath="/bank-admin/onboarding"
+          />
+        ),
+      },
+      {
+        path: "onboarding/application/:applicationId",
+        element: (
+          <ApplicationReviewPage
+            reviewer="BANK"
+            basePath="/bank-admin/onboarding"
+          />
+        ),
       },
       {
         path: "authorisations",
@@ -116,19 +144,25 @@ export const router = createBrowserRouter([
       },
       {
         path: "onboarding",
-        element: <NeoBankOnboardingQueuePage />,
-      },
-      {
-        path: "audit",
-        element: <AuditPage />,
+        element: (
+          <ApplicationQueuePage
+            reviewer="NEOBANK"
+            basePath="/platform-admin/onboarding"
+          />
+        ),
       },
       {
         path: "onboarding/application/:applicationId",
         element: (
-          <AccountOpeningApplicationPage
+          <ApplicationReviewPage
+            reviewer="NEOBANK"
             basePath="/platform-admin/onboarding"
           />
         ),
+      },
+      {
+        path: "audit",
+        element: <AuditPage />,
       },
     ],
   },

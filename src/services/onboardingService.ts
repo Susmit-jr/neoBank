@@ -340,9 +340,9 @@ const mockEmail = (
     {
       id: checkerOneId,
 
-      fullName: "Arjun Mehta",
-      email: mockEmail("arjun.mehta"),
-      mobileNumber: "9876501001",
+      fullName: "Rohan Verma",
+      email: mockEmail("rohan.verma"),
+      mobileNumber: "9876501004",
 
       role: "CHECKER",
 
@@ -398,7 +398,7 @@ const mockEmail = (
           sequence: 1,
           stageName: "Payment Authorisation",
 
-          requiredApprovals: 1,
+          requiredApprovals: 2,
 
           eligibleNeoBankUserIds: [
             checkerOneId,
@@ -414,7 +414,7 @@ const mockEmail = (
       id: crypto.randomUUID(),
 
       documentType: "PAN",
-      fileName: "company_pan_mock.pdf",
+      fileName: "company_pan.pdf",
 
       status: "ADDED",
       uploadedAt: new Date().toISOString(),
@@ -425,7 +425,7 @@ const mockEmail = (
       id: crypto.randomUUID(),
 
       documentType: "GST_CERTIFICATE",
-      fileName: "gst_certificate_mock.pdf",
+      fileName: "gst_certificate.pdf",
 
       status: "ADDED",
       uploadedAt: new Date().toISOString(),
@@ -437,7 +437,7 @@ const mockEmail = (
 
       documentType: "INCORPORATION_DOCUMENT",
       fileName:
-        "certificate_of_incorporation_mock.pdf",
+        "certificate_of_incorporation.pdf",
 
       status: "ADDED",
       uploadedAt: new Date().toISOString(),
@@ -448,7 +448,7 @@ const mockEmail = (
       id: crypto.randomUUID(),
 
       documentType: "BOARD_RESOLUTION",
-      fileName: "board_resolution_mock.pdf",
+      fileName: "board_resolution.pdf",
 
       status: "ADDED",
       uploadedAt: new Date().toISOString(),
@@ -462,7 +462,7 @@ const mockEmail = (
         "AUTHORISED_SIGNATORY_DOCUMENT",
 
       fileName:
-        "authorised_signatory_mock.pdf",
+        "authorised_signatory.pdf",
 
       status: "ADDED",
       uploadedAt: new Date().toISOString(),
@@ -1173,9 +1173,9 @@ export async function completeMerchantOnboarding(
     );
   }
 
-  if (application.status !== "DRAFT") {
+  if (application.status !== "SUBMITTED_TO_BANK") {
     throw new Error(
-      "Only a draft merchant onboarding application can be completed.",
+      "Only an application approved by NeoBank and sent to the bank can be opened.",
     );
   }
 
@@ -1186,7 +1186,10 @@ export async function completeMerchantOnboarding(
   }
 
   const validationResult =
-    validateOnboardingApplication(application);
+    validateOnboardingApplication({
+      ...application,
+      status: "DRAFT",
+    });
 
   if (!validationResult.isValid) {
     throw new Error(
@@ -1475,21 +1478,6 @@ storedApplication.proposedNeoBankUsers.forEach(
     storedApplication.status = "ACCOUNT_OPENED";
     storedApplication.updatedAt = completionTime;
 
-    storedApplication.submittedAt ??= completionTime;
-
-    storedApplication.submittedByUserId = input.completedByUserId;
-
-    storedApplication.submittedByName = input.completedByName;
-
-    storedApplication.neoBankReview = { status: "COMPLETED", 
-      reviewedByUserId:input.completedByUserId,
-      reviewedByName:input.completedByName,
-      reviewStartedAt: completionTime,
-      reviewCompletedAt: completionTime,
-      remarks:
-        "Merchant onboarding completed directly by NeoBank Platform Admin.",
-    };
-
     storedApplication.bankReview = {
       status: "APPROVED",
 
@@ -1506,7 +1494,7 @@ storedApplication.proposedNeoBankUsers.forEach(
       reviewCompletedAt: completionTime,
 
       remarks:
-        "Account details created through the mock onboarding workflow and made available to the Bank Admin portal.",
+        "Application approved and account opened by the bank.",
     };
 
     storedApplication.openedAccount = {
@@ -1575,6 +1563,9 @@ storedApplication.proposedNeoBankUsers.forEach(
       isPrimary: true,
     });
 
+    storedApplication.issuedCredentials =
+      structuredClone(generatedCredentials);
+
     completedApplication =
       structuredClone(storedApplication);
   });
@@ -1592,7 +1583,7 @@ return {
     structuredClone(generatedCredentials),
 
   message:
-    "Merchant onboarded successfully. The account, organisation and merchant users are now active.",
+    "Application approved. The account has been opened and the business users are now active.",
 };
 }
 
@@ -1605,18 +1596,20 @@ export async function getBankAdminOnboardingRecords(): Promise<
 
   const bankVisibleStatuses:
     AccountOpeningApplication["status"][] = [
-      "APPROVED",
-      "ACCOUNT_OPENING_IN_PROGRESS",
+      "SUBMITTED_TO_BANK",
+      "UNDER_BANK_REVIEW",
       "ACCOUNT_OPENED",
       "ACCOUNT_LINKED",
-      "REJECTED",
     ];
 
   return database.accountOpeningApplications
-    .filter((application) =>
-      bankVisibleStatuses.includes(
-        application.status,
-      ),
+    .filter(
+      (application) =>
+        bankVisibleStatuses.includes(
+          application.status,
+        ) ||
+        (application.status === "REJECTED" &&
+          application.bankReview.status === "REJECTED"),
     )
     .sort(
       (first, second) =>
@@ -1636,30 +1629,133 @@ export async function getBankAdminOnboardingRecords(): Promise<
     );
 }
 
-export async function getBankAdminOnboardingRecordById(
+type ReviewActor = { userId: string; name: string };
+
+// NeoBank reviews the application first and either sends it to the bank or rejects it.
+export async function neoBankDecision(
   applicationId: string,
+  decision: "APPROVE" | "REJECT",
+  actor: ReviewActor,
+  reason?: string,
+): Promise<AccountOpeningApplication> {
+  await delay();
+
+  if (decision === "REJECT" && !reason?.trim()) {
+    throw new Error("A reason is required to reject an application.");
+  }
+
+  let updated: AccountOpeningApplication | undefined;
+  const now = new Date().toISOString();
+
+  updateMockDatabase((database) => {
+    const application = database.accountOpeningApplications.find(
+      (item) => item.id === applicationId,
+    );
+
+    if (
+      !application ||
+      (application.status !== "SUBMITTED" &&
+        application.status !== "UNDER_NEOBANK_REVIEW")
+    ) {
+      throw new Error(
+        "This application is not awaiting NeoBank review.",
+      );
+    }
+
+    application.neoBankReview = {
+      status: "COMPLETED",
+      reviewedByUserId: actor.userId,
+      reviewedByName: actor.name,
+      reviewStartedAt: now,
+      reviewCompletedAt: now,
+      remarks:
+        decision === "APPROVE"
+          ? "Application verified and sent to the bank."
+          : reason?.trim(),
+    };
+
+    application.status =
+      decision === "APPROVE" ? "SUBMITTED_TO_BANK" : "REJECTED";
+    application.updatedAt = now;
+
+    updated = structuredClone(application);
+  });
+
+  return updated!;
+}
+
+// The bank approves (which opens the account and activates the users) or rejects.
+export async function bankDecision(
+  applicationId: string,
+  decision: "APPROVE" | "REJECT",
+  actor: ReviewActor,
+  reason?: string,
+): Promise<AccountOpeningApplication> {
+  if (decision === "APPROVE") {
+    const result = await completeMerchantOnboarding({
+      applicationId,
+      completedByUserId: actor.userId,
+      completedByName: actor.name,
+    });
+
+    return result.application;
+  }
+
+  await delay();
+
+  if (!reason?.trim()) {
+    throw new Error("A reason is required to reject an application.");
+  }
+
+  let updated: AccountOpeningApplication | undefined;
+  const now = new Date().toISOString();
+
+  updateMockDatabase((database) => {
+    const application = database.accountOpeningApplications.find(
+      (item) => item.id === applicationId,
+    );
+
+    if (
+      !application ||
+      (application.status !== "SUBMITTED_TO_BANK" &&
+        application.status !== "UNDER_BANK_REVIEW")
+    ) {
+      throw new Error("This application is not awaiting bank review.");
+    }
+
+    application.bankReview = {
+      status: "REJECTED",
+      reviewedByUserId: actor.userId,
+      reviewedByName: actor.name,
+      reviewStartedAt: now,
+      reviewCompletedAt: now,
+      rejectionReason: reason.trim(),
+    };
+
+    application.status = "REJECTED";
+    application.updatedAt = now;
+
+    updated = structuredClone(application);
+  });
+
+  return updated!;
+}
+
+// Public status lookup for the applicant: both the reference and the email must match.
+export async function trackApplication(
+  reference: string,
+  email: string,
 ): Promise<AccountOpeningApplication | undefined> {
   await delay();
 
-  const database = getMockDatabase();
+  const application = getMockDatabase().accountOpeningApplications.find(
+    (item) =>
+      item.status !== "DRAFT" &&
+      item.applicationReference.toLowerCase() ===
+        reference.trim().toLowerCase() &&
+      item.applicant.workEmail.toLowerCase() ===
+        email.trim().toLowerCase(),
+  );
 
-  const application =
-    database.accountOpeningApplications.find(
-      (item) =>
-        item.id === applicationId &&
-        (
-          item.status === "APPROVED" ||
-          item.status ===
-            "ACCOUNT_OPENING_IN_PROGRESS" ||
-          item.status === "ACCOUNT_OPENED" ||
-          item.status === "ACCOUNT_LINKED" ||
-          item.status === "REJECTED"
-        ),
-    );
-
-  if (!application) {
-    return undefined;
-  }
-
-  return structuredClone(application);
+  return application ? structuredClone(application) : undefined;
 }

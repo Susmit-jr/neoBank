@@ -49,7 +49,7 @@ const navigationByPortal: Record<
 > = {
   BANK_ADMIN: [
     {
-      label: "Merchant Onboarding",
+      label: "Applications",
       path: "/bank-admin/onboarding",
       icon: Store,
     },
@@ -98,7 +98,7 @@ const navigationByPortal: Record<
       icon: LayoutDashboard,
     },
     {
-      label: "Merchant Onboarding",
+      label: "Applications",
       path: "/platform-admin/onboarding",
       icon: Store,
     },

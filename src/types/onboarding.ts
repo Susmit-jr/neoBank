@@ -1,3 +1,4 @@
+import type { GeneratedMerchantCredential } from "../services/onboardingService";
 export type AccountApplicationType =
   | "OPEN_NEW_ACCOUNT"
   | "CONNECT_EXISTING_ACCOUNT";
@@ -260,4 +261,7 @@ export type AccountOpeningApplication = {
   bankReview: BankApplicationReview;
 
   openedAccount?: OpenedAccountDetails;
+
+  // Shown once to the applicant on the status page after the bank opens the account.
+  issuedCredentials?: GeneratedMerchantCredential[];
 };
