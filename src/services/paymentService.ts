@@ -135,6 +135,28 @@ export async function getPaymentPreparationData(
   };
 }
 
+export const COOL_OFF_MINUTES = 60;
+export const COOL_OFF_LIMIT = 10000;
+
+// A newly activated beneficiary can only receive small payments for the first hour.
+export function getBeneficiaryCoolOff(
+  beneficiary: { activatedAt?: string } | undefined,
+): { active: boolean; endsAt?: string } {
+  if (!beneficiary?.activatedAt) {
+    return { active: false };
+  }
+
+  const endsAt = new Date(
+    new Date(beneficiary.activatedAt).getTime() +
+      COOL_OFF_MINUTES * 60 * 1000,
+  );
+
+  return {
+    active: new Date() < endsAt,
+    endsAt: endsAt.toISOString(),
+  };
+}
+
 export async function validatePayment(
   input: ValidatePaymentInput,
 ): Promise<PaymentValidationResult> {
@@ -144,6 +166,18 @@ export async function validatePayment(
 
   const errors: string[] = [];
   const warnings: string[] = [];
+
+  const coolOff = getBeneficiaryCoolOff(
+    database.beneficiaries.find(
+      (item) => item.id === input.beneficiaryId,
+    ),
+  );
+
+  if (coolOff.active && input.amount > COOL_OFF_LIMIT) {
+    errors.push(
+      `This beneficiary was added recently. For the first ${COOL_OFF_MINUTES} minutes, payments to a new beneficiary are limited to ₹${COOL_OFF_LIMIT.toLocaleString("en-IN")}. Reduce the amount or try again after ${new Date(coolOff.endsAt ?? "").toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}.`,
+    );
+  }
 
   const debitAccount = database.accounts.find(
     (account) =>

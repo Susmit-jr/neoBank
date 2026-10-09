@@ -14,6 +14,9 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import {
+  COOL_OFF_LIMIT,
+  COOL_OFF_MINUTES,
+  getBeneficiaryCoolOff,
   getPaymentPreparationData,
   submitPayment,
   validatePayment,
@@ -619,6 +622,24 @@ function CreatePaymentPage() {
                   }),
                 )}
               />
+
+              {getBeneficiaryCoolOff(selectedBeneficiary).active && (
+                <div
+                  role="status"
+                  className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 md:col-span-2"
+                >
+                  <p className="font-semibold">
+                    New beneficiary: payment limit applies
+                  </p>
+                  <p className="mt-1">
+                    {selectedBeneficiary?.beneficiaryName} was
+                    added recently. For the first {COOL_OFF_MINUTES}{" "}
+                    minutes you can pay up to ₹
+                    {COOL_OFF_LIMIT.toLocaleString("en-IN")} to
+                    this beneficiary.
+                  </p>
+                </div>
+              )}
 
               <TextField
                 label="Payment amount"

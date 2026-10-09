@@ -398,10 +398,31 @@ export async function processAllAuthorisedPayments(): Promise<number> {
   const authorised = await getAuthorisedPayments();
 
   for (const payment of authorised) {
+    const debitAccount = getMockDatabase().accounts.find(
+      (item) => item.id === payment.debitAccountId,
+    );
+
+    // shortcut: simulated bank rejections, replace with the bank's real response
+    const failure =
+      debitAccount && debitAccount.availableBalance < payment.amount
+        ? {
+            failureCode: "INSUFFICIENT_FUNDS",
+            failureReason:
+              "Insufficient funds in the debit account at the time of processing.",
+          }
+        : payment.beneficiaryAccountNumber.endsWith("0000")
+          ? {
+              failureCode: "BENEFICIARY_ACCOUNT_CLOSED",
+              failureReason:
+                "The beneficiary account is closed or invalid. Please verify the account details with the beneficiary.",
+            }
+          : undefined;
+
     try {
       await processAuthorisedPayment({
         paymentId: payment.id,
-        outcome: "SUCCESSFUL",
+        outcome: failure ? "FAILED" : "SUCCESSFUL",
+        ...failure,
       });
     } catch {
       // Already picked up by another page.
