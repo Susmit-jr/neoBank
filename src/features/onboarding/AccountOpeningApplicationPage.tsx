@@ -390,13 +390,13 @@ const [
       setApplication(savedApplication);
 
       setSuccessMessage(
-        "Mock values added successfully. Review the information before completing onboarding.",
+        "Sample data added. Review the information before completing onboarding.",
       );
     } catch (autoFillError) {
       setError(
         autoFillError instanceof Error
           ? autoFillError.message
-          : "Mock values could not be added.",
+          : "Sample data could not be added.",
       );
     } finally {
       setIsAutoFilling(false);
@@ -781,12 +781,12 @@ setPageMode("SUCCESS");
   <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
     <div>
       <p className="text-sm font-semibold text-blue-950">
-        Merchant login credentials
+        Business Banking login credentials
       </p>
 
       <p className="mt-1 text-xs leading-5 text-blue-800">
         These are the initial credentials for the
-        Merchant portal.
+        Business Banking portal.
       </p>
     </div>
 
@@ -1257,7 +1257,7 @@ setPageMode("SUCCESS");
 
                       <span className="mt-3 inline-flex rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
                         {document.isMockDocument
-                          ? "MOCK DOCUMENT"
+                          ? "SAMPLE DOCUMENT"
                           : formatLabel(
                               document.status,
                             )}
@@ -1362,7 +1362,7 @@ setPageMode("SUCCESS");
 
               {isAutoFilling
                 ? "Adding values..."
-                : "Auto-fill Mock Values"}
+                : "Fill sample data"}
             </button>
 
             <button
@@ -1719,7 +1719,7 @@ setPageMode("SUCCESS");
           >
             {application.authorisedSignatories
               .length === 0 ? (
-              <EmptyState message="No authorised signatories added. Use Auto-fill Mock Values to populate sample records." />
+              <EmptyState message="No authorised signatories added. Use Fill sample data to populate sample records." />
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
                 {application.authorisedSignatories.map(
@@ -1858,10 +1858,10 @@ setPageMode("SUCCESS");
           <FormSection
             icon={FileText}
             title="Documents and declaration"
-            description="Mock document records used for the prototype journey."
+            description="Supporting documents for the application."
           >
             {application.documents.length === 0 ? (
-              <EmptyState message="No documents added. Auto-fill Mock Values will add sample document names." />
+              <EmptyState message="No documents added. Fill sample data will add sample document names." />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {application.documents.map(
@@ -1881,7 +1881,7 @@ setPageMode("SUCCESS");
                       </p>
 
                       <span className="mt-3 inline-flex rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                        Mock document
+                        Sample document
                       </span>
                     </div>
                   ),
@@ -1906,7 +1906,7 @@ setPageMode("SUCCESS");
               <span className="text-sm leading-6 text-slate-700">
                 I confirm that the merchant information is
                 correct and may be shared with the Bank
-                Admin portal as part of this mock
+                Admin portal as part of this
                 onboarding.
               </span>
             </label>

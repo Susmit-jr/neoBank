@@ -27,7 +27,7 @@ export const portalThemes: Record<PortalType, PortalTheme> = {
     brand: "X CORP",
     brandMark: "X",
     workspace: "Business Banking",
-    shortWorkspace: "Merchant",
+    shortWorkspace: "Business Banking",
     securityLabel: "Protected business session",
   },
 };

@@ -309,10 +309,6 @@ function LoginPage({
             </button>
           </div>
 
-          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
-            Do not use actual banking credentials in this
-            prototype.
-          </div>
         </div>
       </section>
     </main>

@@ -213,19 +213,6 @@ navigate(
           })}
         </div>
 
-        <div className="mt-10 rounded-2xl border border-blue-200 bg-blue-50 p-5">
-          <p className="text-sm font-semibold text-blue-950">
-            Prototype assistance
-          </p>
-
-          <p className="mt-2 text-sm leading-6 text-blue-900">
-            The application form will include an
-            <strong> Auto-fill Mock Values </strong>
-            option, allowing the complete mock application
-            to be populated without entering every value
-            manually.
-          </p>
-        </div>
       </section>
     </main>
   );

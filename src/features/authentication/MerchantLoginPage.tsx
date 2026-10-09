@@ -4,7 +4,7 @@ function MerchantLoginPage() {
   return (
     <LoginPage
       portal="MERCHANT"
-      portalName="Merchant / Customer"
+      portalName="Business Banking"
       description="Access corporate accounts, beneficiaries, payments, approvals, reports and user-administration capabilities."
       usernameLabel="Corporate User ID"
       demoUsername="maker"
