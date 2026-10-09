@@ -90,7 +90,9 @@ function BankAuthorisationsPage() {
                       <span className="ml-2 text-xs text-slate-400">
                         {session.requestType === "PAYMENT"
                           ? "Payment"
-                          : "Beneficiary"}
+                          : session.requestType === "ADD_BALANCE"
+                            ? "Add balance"
+                            : "Beneficiary"}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-slate-700">
