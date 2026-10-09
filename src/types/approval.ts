@@ -101,6 +101,8 @@ export type BankAuthorisationSession = {
   stageSequence: number;
 
   status: BankAuthorisationSessionStatus;
+  credentialsVerified?: boolean;
+  otpAttempts?: number;
 
   createdAt: string;
   expiresAt: string;

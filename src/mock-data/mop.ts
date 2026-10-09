@@ -86,7 +86,7 @@ export const mockModesOfOperation: ModeOfOperation[] = [
         id: "MOP-PAY-STAGE-001",
         sequence: 1,
         stageName: "Payment Authorisation",
-        requiredApprovals: 1,
+        requiredApprovals: 2,
         eligibleUserIds: [
           "USR-MERCHANT-003",
           "USR-MERCHANT-004",

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { formatCurrency } from "../../utils/currency";
+import { formatDate } from "../../utils/dates";
 
 import {
   useEffect,
@@ -20,6 +21,7 @@ import {
   approvePaymentThroughBank,
   approveThroughBank,
   authenticateBankUser,
+  verifyBankOtp,
   getBankSessionDetails,
   type BankSessionDetails,
 } from "../../services/authorisationService";
@@ -27,9 +29,24 @@ import {
 type PageStep =
   | "LOADING"
   | "LOGIN"
+  | "OTP"
   | "REVIEW"
   | "SUCCESS"
   | "ERROR";
+
+// Opened in the same tab (popup blocked or mobile) when there is no opener.
+const returnUrl =
+  new URLSearchParams(window.location.search).get(
+    "return",
+  ) ?? "/merchant/approvals";
+
+function closeOrReturn() {
+  if (window.opener) {
+    window.close();
+  } else {
+    window.location.assign(returnUrl);
+  }
+}
 
 function postResultToParent(
   status: string,
@@ -65,6 +82,7 @@ function BankAuthorisationPage() {
     useState("");
 
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -78,14 +96,6 @@ function BankAuthorisationPage() {
 
 useEffect(() => {
   async function loadSession() {
-    if (!window.opener) {
-      setError(
-        "This authorisation page must be opened from the NeoBank approval tray.",
-      );
-      setStep("ERROR");
-      return;
-    }
-
     if (!sessionId) {
       setError(
         "The bank authorisation session is missing.",
@@ -121,7 +131,11 @@ useEffect(() => {
         return;
       }
 
-      setStep("LOGIN");
+      setStep(
+        sessionDetails.session.credentialsVerified
+          ? "OTP"
+          : "LOGIN",
+      );
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -138,7 +152,7 @@ useEffect(() => {
 
 useEffect(() => {
   const parentWindowCheck = window.setInterval(() => {
-    if (!window.opener || window.opener.closed) {
+    if (window.opener?.closed) {
       window.clearInterval(parentWindowCheck);
 
       setError(
@@ -160,7 +174,7 @@ return;
 }
  
 const closeTimer = window.setTimeout(() => {
-window.close();
+closeOrReturn();
 }, 3000);
  
 return () => {
@@ -189,12 +203,39 @@ window.clearTimeout(closeTimer);
       });
 
       setPassword("");
-      setStep("REVIEW");
+      setStep("OTP");
     } catch (loginError) {
       setError(
         loginError instanceof Error
           ? loginError.message
           : "Bank authentication failed.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleOtp(
+    event: SubmitEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (!sessionId) {
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await verifyBankOtp(sessionId, otp);
+      setOtp("");
+      setStep("REVIEW");
+    } catch (otpError) {
+      setError(
+        otpError instanceof Error
+          ? otpError.message
+          : "The OTP could not be verified.",
       );
     } finally {
       setIsSubmitting(false);
@@ -284,10 +325,10 @@ window.clearTimeout(closeTimer);
           <button
             
             type="button"
-            onClick={() => window.close()}
+            onClick={closeOrReturn}
             className="mt-7 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white"
           >
-            Close window
+            Return to NeoBank
           </button>
         </section>
       </main>
@@ -312,10 +353,10 @@ window.clearTimeout(closeTimer);
 
           <button
             type="button"
-            onClick={() => window.close()}
+            onClick={closeOrReturn}
             className="mt-8 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
           >
-            Close window
+            Return to NeoBank
           </button>
         </section>
       </main>
@@ -452,6 +493,63 @@ window.clearTimeout(closeTimer);
           </form>
         )}
 
+        {step === "OTP" && (
+          <form
+            onSubmit={handleOtp}
+            className="space-y-5 p-6 sm:p-8"
+          >
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <LockKeyhole size={24} />
+              </div>
+
+              <h2 className="mt-5 text-xl font-bold text-slate-950">
+                Verify with OTP
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                A 6-digit one-time password has been
+                sent to your registered mobile number.
+              </p>
+            </div>
+
+            {error && (
+              <div
+                role="alert"
+                className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+              >
+                {error}
+              </div>
+            )}
+
+            <BankInput
+              label="One-time password"
+              value={otp}
+              onChange={setOtp}
+              placeholder="Enter 6-digit OTP"
+            />
+
+            <button
+              type="submit"
+              disabled={isSubmitting || otp.length < 6}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-60"
+            >
+              {isSubmitting && (
+                <LoaderCircle
+                  size={18}
+                  className="animate-spin"
+                />
+              )}
+
+              Verify and continue
+            </button>
+
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-5 text-blue-900">
+              Demo OTP: <strong>123456</strong>
+            </div>
+          </form>
+        )}
+
         {step === "REVIEW" && (
           <div className="p-6 sm:p-8">
 
@@ -462,7 +560,9 @@ window.clearTimeout(closeTimer);
 </h2>
 
             <p className="mt-2 text-sm text-slate-600">
-              Review the beneficiary before authorising.
+              {details.requestType === "PAYMENT"
+                ? "Review the payment before authorising."
+                : "Review the beneficiary before authorising."}
             </p>
 
             {error && (
@@ -596,7 +696,7 @@ window.clearTimeout(closeTimer);
       <ReviewItem
         label="Scheduled date"
         value={
-          details.payment.scheduledDate
+          formatDate(details.payment.scheduledDate)
         }
       />
     </>
@@ -616,9 +716,16 @@ window.clearTimeout(closeTimer);
   />
 </div>
 
+            <AuthorisersPanel
+              authorisers={details.authorisers}
+              required={
+                details.approvalStage.requiredApprovals
+              }
+            />
+
             <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
               By selecting Authorise, you confirm that the
-              displayed beneficiary details are correct.
+              displayed {details.requestType === "PAYMENT" ? "payment" : "beneficiary"} details are correct.
             </div>
 
             <button
@@ -646,6 +753,77 @@ window.clearTimeout(closeTimer);
         )}
       </section>
     </main>
+  );
+}
+
+function AuthorisersPanel({
+  authorisers,
+  required,
+}: {
+  authorisers: BankSessionDetails["authorisers"];
+  required: number;
+}) {
+  const approved = authorisers.filter(
+    (item) => item.status === "APPROVED",
+  ).length;
+  const remainingAfterYou = Math.max(
+    required - approved - 1,
+    0,
+  );
+  const others = authorisers.filter(
+    (item) => item.status === "PENDING",
+  );
+
+  return (
+    <div className="mt-6 rounded-2xl border border-slate-200 p-5">
+      <p className="text-sm font-semibold text-slate-950">
+        {remainingAfterYou === 0
+          ? "Your authorisation completes this request."
+          : `You are authorising this request. ${remainingAfterYou} more authorisation${remainingAfterYou > 1 ? "s" : ""} required after yours.`}
+      </p>
+
+      <ul className="mt-4 space-y-3">
+        {authorisers.map((item) => (
+          <li
+            key={item.userId}
+            className="flex items-center justify-between text-sm"
+          >
+            <span>
+              <span className="font-semibold text-slate-900">
+                {item.name}
+              </span>
+              <span className="ml-2 text-xs text-slate-500">
+                {item.role}
+              </span>
+            </span>
+
+            <span
+              className={
+                item.status === "APPROVED"
+                  ? "text-xs font-semibold text-emerald-700"
+                  : item.status === "YOU"
+                    ? "text-xs font-semibold text-blue-700"
+                    : "text-xs font-semibold text-amber-700"
+              }
+            >
+              {item.status === "APPROVED"
+                ? "Authorised"
+                : item.status === "YOU"
+                  ? "You"
+                  : "Pending"}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {remainingAfterYou > 0 && others.length > 0 && (
+        <p className="mt-4 text-xs text-slate-500">
+          Any {remainingAfterYou} of the pending
+          authorisers can complete the remaining
+          authorisation, in any order.
+        </p>
+      )}
+    </div>
   );
 }
 

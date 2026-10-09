@@ -21,7 +21,18 @@ export type BankLoginInput = {
   password: string;
 };
 
-export type BankSessionDetails =
+export type StageAuthoriser = {
+  userId: string;
+  name: string;
+  role: string;
+  status: "APPROVED" | "YOU" | "PENDING";
+};
+
+export const BANK_OTP_MAX_ATTEMPTS = 3;
+// shortcut: fixed OTP for the demo, replace with the bank's OTP service
+const DEMO_OTP = "123456";
+
+export type BankSessionDetails = (
   | {
       requestType: "BENEFICIARY_CREATION";
       session: BankAuthorisationSession;
@@ -35,7 +46,8 @@ export type BankSessionDetails =
       beneficiary?: never;
       payment: Payment;
       approvalStage: ApprovalRequestStage;
-    };
+    }
+) & { authorisers: StageAuthoriser[] };
 
 export type CompleteAuthorisationResult = {
   beneficiary: Beneficiary;
@@ -64,6 +76,33 @@ function countStageApprovals(
       decision.approvalRequestStageId === stageId &&
       decision.action === "APPROVED",
   ).length;
+}
+
+function awaitingMessage(
+  database: ReturnType<typeof getMockDatabase>,
+  stage: ApprovalRequestStage,
+  approvalCount: number,
+): string {
+  const approvedIds = new Set(
+    database.approvalDecisions
+      .filter(
+        (item) =>
+          item.approvalRequestStageId === stage.id &&
+          item.action === "APPROVED",
+      )
+      .map((item) => item.actionedByUserId),
+  );
+
+  const pendingNames = stage.eligibleUserIds
+    .filter((id) => !approvedIds.has(id))
+    .map(
+      (id) =>
+        database.users.find((user) => user.id === id)
+          ?.fullName,
+    )
+    .filter(Boolean);
+
+  return `Your authorisation has been recorded. ${approvalCount} of ${stage.requiredApprovals} authorisations completed. Awaiting ${stage.requiredApprovals - approvalCount} more from: ${pendingNames.join(", ")}.`;
 }
 
 export async function createBankAuthorisationSession(
@@ -440,6 +479,46 @@ export async function getBankSessionDetails(
     );
   }
 
+  const approvedUserIds = new Set(
+    database.approvalDecisions
+      .filter(
+        (item) =>
+          item.approvalRequestStageId ===
+            approvalStage.id &&
+          item.action === "APPROVED",
+      )
+      .map((item) => item.actionedByUserId),
+  );
+
+  const authorisers: StageAuthoriser[] =
+    approvalStage.eligibleUserIds.flatMap(
+      (userId) => {
+        const eligibleUser = database.users.find(
+          (item) => item.id === userId,
+        );
+
+        if (!eligibleUser) {
+          return [];
+        }
+
+        return [
+          {
+            userId,
+            name: eligibleUser.fullName,
+            role: eligibleUser.role
+              .split("_")
+              .map((word) => word[0] + word.slice(1).toLowerCase())
+              .join(" "),
+            status: approvedUserIds.has(userId)
+              ? "APPROVED"
+              : userId === session.platformUserId
+                ? "YOU"
+                : "PENDING",
+          } as const,
+        ];
+      },
+    );
+
   if (
     session.requestType ===
     "BENEFICIARY_CREATION"
@@ -461,6 +540,7 @@ export async function getBankSessionDetails(
       session,
       beneficiary,
       approvalStage,
+      authorisers,
     };
   }
 
@@ -481,6 +561,7 @@ export async function getBankSessionDetails(
       session,
       payment,
       approvalStage,
+      authorisers,
     };
   }
 
@@ -545,7 +626,68 @@ export async function authenticateBankUser(
       );
 
     if (session) {
-      session.status = "AUTHENTICATED";
+      session.credentialsVerified = true;
+    }
+  });
+}
+
+export async function verifyBankOtp(
+  sessionId: string,
+  otp: string,
+): Promise<void> {
+  await delay();
+
+  const { session } = await getBankSessionDetails(
+    sessionId,
+  );
+
+  if (
+    session.status !== "CREATED" ||
+    !session.credentialsVerified
+  ) {
+    throw new Error(
+      "This bank authorisation session is not available for verification.",
+    );
+  }
+
+  if (
+    (session.otpAttempts ?? 0) >=
+    BANK_OTP_MAX_ATTEMPTS
+  ) {
+    throw new Error(
+      "Too many incorrect attempts. Close this window and restart authorisation.",
+    );
+  }
+
+  if (otp.trim() !== DEMO_OTP) {
+    const attempts = (session.otpAttempts ?? 0) + 1;
+
+    updateMockDatabase((database) => {
+      const stored =
+        database.bankAuthorisationSessions.find(
+          (item) => item.id === sessionId,
+        );
+
+      if (stored) {
+        stored.otpAttempts = attempts;
+      }
+    });
+
+    throw new Error(
+      attempts >= BANK_OTP_MAX_ATTEMPTS
+        ? "Too many incorrect attempts. Close this window and restart authorisation."
+        : `The OTP entered is incorrect. ${BANK_OTP_MAX_ATTEMPTS - attempts} attempt(s) remaining.`,
+    );
+  }
+
+  updateMockDatabase((database) => {
+    const stored =
+      database.bankAuthorisationSessions.find(
+        (item) => item.id === sessionId,
+      );
+
+    if (stored) {
+      stored.status = "AUTHENTICATED";
     }
   });
 }
@@ -666,7 +808,7 @@ export async function approveThroughBank(
       result = {
         beneficiary: structuredClone(beneficiary),
         nextStageExists: false,
-        message: `${approvalCount} of ${currentStage.requiredApprovals} required approvals completed for the current MOP stage.`,
+        message: awaitingMessage(database, currentStage, approvalCount),
       };
 
       return;
@@ -867,7 +1009,7 @@ export async function approvePaymentThroughBank(
       result = {
         payment: structuredClone(payment),
         nextStageExists: false,
-        message: `${approvalCount} of ${currentStage.requiredApprovals} approvals completed. Transaction proceeded for further authorisation.`,
+        message: awaitingMessage(database, currentStage, approvalCount),
       };
 
       return;

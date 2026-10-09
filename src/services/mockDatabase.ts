@@ -19,7 +19,7 @@ import {
 } from "../mock-data/organisations";
 
 const DATABASE_STORAGE_KEY = "neobank_mock_database";
-const DATABASE_VERSION = 7;
+const DATABASE_VERSION = 8;
 
 const emptyDatabase: MockDatabase = {
   users: [...mockUsers],

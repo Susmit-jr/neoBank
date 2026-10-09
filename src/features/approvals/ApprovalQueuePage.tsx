@@ -307,9 +307,13 @@ function ApprovalQueuePage() {
     );
 
     if (!bankPopup) {
-      throw new Error(
-        "The bank authorisation pop-up was blocked. Allow pop-ups for this website and try again.",
+      // Popup blocked or unsupported (e.g. mobile): continue in this tab.
+      window.location.assign(
+        `/bank-authorisation/${session.id}?return=${encodeURIComponent(
+          window.location.pathname,
+        )}`,
       );
+      return;
     }
 
     bankPopup.focus();
