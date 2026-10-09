@@ -11,13 +11,16 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import IndusIndLogo from "../../components/branding/IndusIndLogo";
+import { getMockDatabase } from "../../services/mockDatabase";
 import { useAuth } from "../../store/AuthContext";
+import { humanise } from "../onboarding/labels";
 import type { PortalType } from "../../types/auth";
 
 type DemoCredential = {
   label: string;
   username: string;
   password: string;
+  note?: string;
 };
 
 type PortalOption = {
@@ -40,11 +43,8 @@ const options: PortalOption[] = [
     dashboardRoute: "/merchant/dashboard",
     swatch: "#1d4ed8",
     icon: Store,
-    demos: [
-      { label: "Maker", username: "maker", password: "Maker@123" },
-      { label: "Checker 1", username: "checker1", password: "Checker@123" },
-      { label: "Checker 2", username: "checker2", password: "Checker@123" },
-    ],
+    // Filled from the businesses that exist, see businessDemos below.
+    demos: [],
   },
   {
     portal: "PLATFORM_ADMIN",
@@ -76,6 +76,52 @@ const options: PortalOption[] = [
   },
 ];
 
+const roleOrder = [
+  "CORPORATE_ADMIN",
+  "MAKER",
+  "CHECKER",
+  "CHECKER_LEVEL_1",
+  "CHECKER_LEVEL_2",
+  "VIEW_ONLY",
+];
+
+// Every business with its team: logins for Business Banking and, for checkers, the bank window.
+function getBusinesses() {
+  const database = getMockDatabase();
+
+  return database.organisations
+    .map((organisation) => ({
+      id: organisation.id,
+      name: organisation.legalName,
+      demos: database.users
+        .filter(
+          (user) =>
+            user.portal === "MERCHANT" &&
+            user.organisationId === organisation.id &&
+            user.isActive,
+        )
+        .sort(
+          (first, second) =>
+            roleOrder.indexOf(first.role) - roleOrder.indexOf(second.role),
+        )
+        .map((user): DemoCredential => {
+          const bankUser = database.bankUsers.find(
+            (item) => item.platformUserId === user.id,
+          );
+
+          return {
+            label: `${humanise(user.role)}: ${user.fullName}`,
+            username: user.username,
+            password: user.password,
+            note: bankUser
+              ? `Bank window: ${bankUser.corporateId} / ${bankUser.bankUserId} / ${bankUser.password}`
+              : undefined,
+          };
+        }),
+    }))
+    .filter((business) => business.demos.length > 0);
+}
+
 type LoginDialogProps = {
   initialPortal: PortalType;
   onClose: () => void;
@@ -100,6 +146,12 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selected = options.find((item) => item.portal === portal)!;
+
+  const businesses = getBusinesses();
+  const [businessId, setBusinessId] = useState(businesses[0]?.id ?? "");
+  const business =
+    businesses.find((item) => item.id === businessId) ?? businesses[0];
+  const demos = portal === "MERCHANT" ? (business?.demos ?? []) : selected.demos;
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setEntered(true));
@@ -330,8 +382,26 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
               Demo credentials
             </p>
 
-            <ul className="mt-2 max-h-28 space-y-1.5 overflow-y-auto pr-1">
-              {selected.demos.map((demo) => (
+            {portal === "MERCHANT" && businesses.length > 0 && (
+              <select
+                aria-label="Business"
+                value={business?.id}
+                onChange={(event) => {
+                  setBusinessId(event.target.value);
+                  reset();
+                }}
+                className="mt-2 w-full rounded-lg border border-[var(--border-subtle)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--brand-primary)]"
+              >
+                {businesses.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <ul className="mt-2 max-h-40 space-y-1.5 overflow-y-auto pr-1">
+              {demos.map((demo) => (
                 <li
                   key={demo.username}
                   className="flex items-center justify-between gap-3 rounded-lg bg-white/70 px-3 py-2"
@@ -341,6 +411,9 @@ function LoginDialog({ initialPortal, onClose }: LoginDialogProps) {
                     <p className="text-xs text-slate-500">
                       {demo.username} / {demo.password}
                     </p>
+                    {demo.note && (
+                      <p className="text-[11px] text-slate-400">{demo.note}</p>
+                    )}
                   </div>
 
                   <button

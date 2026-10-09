@@ -444,7 +444,7 @@ useEffect(() => {
               : "w-full max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
           }
         >
-          <header className="flex items-center gap-4 border-b-4 border-[var(--brand-primary)] bg-white px-8 py-4 pr-16">
+          <header className="flex items-center gap-4 border-b-4 border-[var(--brand-primary)] bg-white px-8 py-4">
             <IndusIndLogo />
             <span className="h-6 w-px bg-slate-200" aria-hidden="true" />
             <h1 className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">

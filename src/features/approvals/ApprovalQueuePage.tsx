@@ -4,6 +4,7 @@ import {
   CircleDollarSign,
   Clock3,
   Eye,
+  Lock,
   RefreshCw,
   ShieldCheck,
   UserRoundPlus,
@@ -316,6 +317,8 @@ function ApprovalQueuePage() {
     const session = await create(selectedItem.requestId, user.id);
 
     setBankSessionId(session.id);
+    setSelectedItem(null);
+    setSearchParams({}, { replace: true });
 
     void loadApprovals();
   } catch (authorisationError) {
@@ -848,30 +851,44 @@ function ApprovalQueuePage() {
 
       {bankSessionId && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-[56rem] overflow-hidden rounded-3xl bg-white shadow-2xl">
+          <div
+            role="dialog"
+            aria-label="IndusInd Bank secure authorisation"
+            className="w-full max-w-[56rem] overflow-hidden rounded-xl border border-slate-300 bg-white shadow-2xl"
+          >
+            <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-100 px-4 py-2.5">
+              <span className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs text-slate-600 ring-1 ring-slate-200">
+                <Lock size={13} className="shrink-0 text-emerald-600" />
+                <span className="truncate">
+                  https://authorise.indusind.com/session/
+                  {bankSessionId.slice(0, 8)}
+                </span>
+              </span>
+
+              <button
+                type="button"
+                aria-label="Close bank window"
+                onClick={() => {
+                  setBankSessionId(null);
+                  void loadApprovals();
+                }}
+                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
             <iframe
               title="IndusInd Bank authorisation"
               src={`/bank-authorisation/${bankSessionId}`}
               style={{
                 height: Math.min(
                   bankFrameHeight,
-                  Math.round(window.innerHeight * 0.94),
+                  Math.round(window.innerHeight * 0.94) - 48,
                 ),
               }}
               className="block w-full border-0 transition-[height] duration-150"
             />
-
-            <button
-              type="button"
-              aria-label="Close bank window"
-              onClick={() => {
-                setBankSessionId(null);
-                void loadApprovals();
-              }}
-              className="absolute right-3 top-3 rounded-lg bg-slate-100 p-1.5 text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
-            >
-              <X size={18} />
-            </button>
           </div>
         </div>
       )}
