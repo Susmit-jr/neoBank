@@ -257,6 +257,37 @@ export async function saveOnboardingDraft(
   return structuredClone(updatedApplication);
 }
 
+const sampleCompanies = [
+  { name: "Zenith Retail Ventures Private Limited", business: "Retail and consumer goods", address: "Plot 14, Sector 18, Gurugram, Haryana 122015", branch: "Delhi Connaught Place", year: "2019-08-21" },
+  { name: "Bluepeak Logistics Private Limited", business: "Freight and warehousing", address: "Unit 7, Bhosari MIDC, Pune, Maharashtra 411026", branch: "Mumbai Corporate Branch", year: "2017-02-09" },
+  { name: "Northwind Foods Private Limited", business: "Packaged food manufacturing", address: "12, Industrial Area Phase 2, Chandigarh 160002", branch: "Delhi Connaught Place", year: "2020-11-03" },
+  { name: "Vertex Software Labs Private Limited", business: "Software development services", address: "4th Floor, Embassy Tech Square, Bengaluru, Karnataka 560103", branch: "Bengaluru MG Road", year: "2018-06-27" },
+  { name: "Silverline Textiles Private Limited", business: "Textile manufacturing and export", address: "88, Tirupur Road, Coimbatore, Tamil Nadu 641604", branch: "Chennai Anna Salai", year: "2016-09-14" },
+  { name: "Orchid Healthcare Solutions Private Limited", business: "Medical devices distribution", address: "5, Salt Lake Sector V, Kolkata, West Bengal 700091", branch: "Mumbai Corporate Branch", year: "2022-01-18" },
+];
+
+const samplePeople = [
+  "Aditya Rao", "Meera Iyer", "Vikram Singh", "Ananya Gupta", "Rahul Desai",
+  "Sneha Kulkarni", "Imran Qureshi", "Kavita Menon", "Sanjay Patil", "Pooja Bhatia",
+  "Nikhil Joshi", "Divya Reddy", "Harsh Vora", "Tara Banerjee", "Manish Agarwal",
+  "Ritu Chawla", "Farhan Ali", "Lakshmi Nair", "Gaurav Saxena", "Isha Kapoor",
+];
+
+const pickOne = <T,>(items: T[]): T =>
+  items[Math.floor(Math.random() * items.length)];
+
+function pickPeople(count: number): string[] {
+  return [...samplePeople].sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+const randomPersonalPan = () => {
+  const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const letter = () => letters[Math.floor(Math.random() * letters.length)];
+  return `${letter()}${letter()}${letter()}P${letter()}${Math.floor(1000 + Math.random() * 9000)}${letter()}`;
+};
+
+const randomMobile = () => `9${Math.floor(100000000 + Math.random() * 899999999)}`;
+
 export function generateMockOnboardingValues(
   application: AccountOpeningApplication,
 ): AccountOpeningApplication {
@@ -272,11 +303,18 @@ export function generateMockOnboardingValues(
     .slice(-8)
     .toLowerCase();
 
-const mockEmail = (
-  name: string,
-): string => {
-  return `${name}.${applicationSuffix}@acmedemo.in`;
-};
+  const adminMobile = randomMobile();
+  const checkerTwoMobile = randomMobile();
+  const company = pickOne(sampleCompanies);
+  const [applicantName, adminName, makerName, checkerOneName, checkerTwoName] =
+    pickPeople(5);
+  const domain = `${company.name.split(" ")[0].toLowerCase()}.in`;
+
+  const mockEmail = (
+    name: string,
+  ): string => {
+    return `${name.toLowerCase().replace(/\s+/g, ".")}.${applicationSuffix}@${domain}`;
+  };
   const signatoryOneId = crypto.randomUUID();
   const signatoryTwoId = crypto.randomUUID();
 
@@ -289,12 +327,12 @@ const mockEmail = (
     {
       id: signatoryOneId,
 
-      fullName: "Arjun Mehta",
+      fullName: adminName,
       designation: "Chief Financial Officer",
 
-      email: mockEmail("arjun.mehta"),
-      mobileNumber: "9876501001",
-      pan: "AAMPM1234K",
+      email: mockEmail(adminName),
+      mobileNumber: adminMobile,
+      pan: randomPersonalPan(),
 
       authority: "BOTH",
 
@@ -303,12 +341,12 @@ const mockEmail = (
     {
       id: signatoryTwoId,
 
-      fullName: "Priya Nair",
+      fullName: checkerTwoName,
       designation: "Finance Director",
 
-      email: mockEmail("priya.nair"),
-      mobileNumber: "9876501002",
-      pan: "AANPN5678L",
+      email: mockEmail(checkerTwoName),
+      mobileNumber: checkerTwoMobile,
+      pan: randomPersonalPan(),
 
       authority: "BANKING_TRANSACTIONS",
 
@@ -320,9 +358,9 @@ const mockEmail = (
     {
       id: corporateAdminId,
 
-      fullName: "Arjun Mehta",
-      email: mockEmail("arjun.mehta"),
-      mobileNumber: "9876501001",
+      fullName: adminName,
+      email: mockEmail(adminName),
+      mobileNumber: adminMobile,
 
       role: "CORPORATE_ADMIN",
 
@@ -331,18 +369,18 @@ const mockEmail = (
     {
       id: makerId,
 
-      fullName: "Neha Sharma",
-      email: mockEmail("neha.sharma"),
-      mobileNumber: "9876501003",
+      fullName: makerName,
+      email: mockEmail(makerName),
+      mobileNumber: randomMobile(),
 
       role: "MAKER",
     },
     {
       id: checkerOneId,
 
-      fullName: "Rohan Verma",
-      email: mockEmail("rohan.verma"),
-      mobileNumber: "9876501004",
+      fullName: checkerOneName,
+      email: mockEmail(checkerOneName),
+      mobileNumber: randomMobile(),
 
       role: "CHECKER",
 
@@ -351,9 +389,9 @@ const mockEmail = (
     {
       id: checkerTwoId,
 
-      fullName: "Priya Nair",
-      email: mockEmail("priya.nair"),
-      mobileNumber: "9876501002",
+      fullName: checkerTwoName,
+      email: mockEmail(checkerTwoName),
+      mobileNumber: checkerTwoMobile,
 
       role: "CHECKER",
 
@@ -475,24 +513,18 @@ const mockEmail = (
     ...structuredClone(application),
 
     applicant: {
-      fullName:
-        application.applicant.fullName ||
-        "Karan Malhotra",
+      fullName: applicantName,
 
-      workEmail:
-        application.applicant.workEmail ||
-        mockEmail("karan.malhotra"),
+      workEmail: mockEmail(applicantName),
 
-      mobileNumber:
-        application.applicant.mobileNumber ||
-        "9876501000",
+      mobileNumber: randomMobile(),
 
       designation: "Finance Manager",
     },
 
     organisation: {
       legalName:
-        "Acme Digital Commerce Private Limited",
+        company.name,
 
       constitution:
         "PRIVATE_LIMITED_COMPANY",
@@ -500,13 +532,13 @@ const mockEmail = (
       pan: generateMockPan(),
       gstin: generateMockGstin(),
 
-      dateOfIncorporation: "2021-04-15",
+      dateOfIncorporation: company.year,
 
       natureOfBusiness:
-        "Digital commerce and technology services",
+        company.business,
 
       registeredAddress:
-        "8th Floor, Business Park, Lower Parel, Mumbai, Maharashtra 400013",
+        company.address,
     },
 
     authorisedSignatories,
@@ -530,7 +562,7 @@ const mockEmail = (
       accountType: "CURRENT_ACCOUNT",
 
       preferredBranch:
-        "Mumbai Corporate Branch",
+        company.branch,
 
       requestedServices: [
         "CORPORATE_NET_BANKING",
