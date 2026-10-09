@@ -4,6 +4,8 @@ import { mockBeneficiaries } from "../mock-data/beneficiaries";
 import type { MockDatabase } from "../types/common";
 
 import { mockUsers } from "../mock-data/users";
+import { mockBankUsers } from "../mock-data/bankUsers";
+import { mockModesOfOperation } from "../mock-data/mop";
 
 import {
   mockAccountOpeningApplications,
@@ -19,10 +21,12 @@ import {
 } from "../mock-data/organisations";
 
 const DATABASE_STORAGE_KEY = "neobank_mock_database";
-const DATABASE_VERSION = 8;
+const DATABASE_VERSION = 10;
 
 const emptyDatabase: MockDatabase = {
   users: [...mockUsers],
+  bankUsers: [...mockBankUsers],
+  modesOfOperation: [...mockModesOfOperation],
   organisations: [
   ...mockMerchantOrganisations,
 ],

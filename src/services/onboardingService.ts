@@ -1014,6 +1014,11 @@ export type GeneratedMerchantCredential = {
   role: UserRole;
   username: string;
   initialPassword: string;
+  bankCredentials?: {
+    corporateId: string;
+    bankUserId: string;
+    password: string;
+  };
 };
 
 export type CompleteMerchantOnboardingResult = {
@@ -1216,7 +1221,7 @@ export async function completeMerchantOnboarding(
     | AccountOpeningApplication
     | undefined;
 
-  let generatedCredentials:
+  const generatedCredentials:
   GeneratedMerchantCredential[] = [];
 
   updateMockDatabase((updatedDatabase) => {
@@ -1413,6 +1418,58 @@ storedApplication.proposedNeoBankUsers.forEach(
 );
 
     updatedDatabase.users.push(...createdUsers);
+
+    storedApplication.proposedMopRules.forEach(
+      (rule, ruleIndex) => {
+        updatedDatabase.modesOfOperation.push({
+          id: crypto.randomUUID(),
+          organisationId,
+          mopReference: `MOP-${rule.operationType.replaceAll("_", "-")}-${ruleIndex + 1}`,
+          version: 1,
+          status: "ACTIVE",
+          operationType: rule.operationType,
+          stages: rule.stages.map((stage) => ({
+            id: crypto.randomUUID(),
+            sequence: stage.sequence,
+            stageName: stage.stageName,
+            requiredApprovals: stage.requiredApprovals,
+            eligibleUserIds: [
+              ...stage.eligibleNeoBankUserIds,
+            ],
+          })),
+          effectiveFrom: completionTime.slice(0, 10),
+        });
+      },
+    );
+
+    // The bank holds its own copy of every checker's net banking identity.
+    createdUsers
+      .filter((user) => user.role === "CHECKER")
+      .forEach((user) => {
+        const bankCredentials = {
+          corporateId,
+          bankUserId: `bank${user.username}`,
+          // shortcut: fixed initial bank password, replace with bank-issued credentials
+          password: "BankChecker@123",
+        };
+
+        updatedDatabase.bankUsers.push({
+          id: crypto.randomUUID(),
+          ...bankCredentials,
+          organisationId,
+          platformUserId: user.id,
+          fullName: user.fullName,
+          isActive: true,
+        });
+
+        const credential = generatedCredentials.find(
+          (item) => item.userId === user.id,
+        );
+
+        if (credential) {
+          credential.bankCredentials = bankCredentials;
+        }
+      });
 
 
     storedApplication.status = "ACCOUNT_OPENED";

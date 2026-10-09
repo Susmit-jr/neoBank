@@ -1,3 +1,5 @@
+import type { ModeOfOperation } from "./approval";
+import type { MockBankUser } from "../mock-data/bankUsers";
 import type {
   ApprovalDecision,
   ApprovalRequestStage,
@@ -27,6 +29,8 @@ export type MockDatabase = {
   version: number;
 
   users: MockUser[];
+  bankUsers: MockBankUser[];
+  modesOfOperation: ModeOfOperation[];
   accounts: BankAccount[];
   transactions: AccountTransaction[];
 

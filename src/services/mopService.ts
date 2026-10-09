@@ -1,4 +1,4 @@
-import { mockModesOfOperation } from "../mock-data/mop";
+import { getMockDatabase } from "./mockDatabase";
 import type {
   ModeOfOperation,
   OperationType,
@@ -80,7 +80,7 @@ export async function getApplicableMop(
 ): Promise<ModeOfOperation> {
   await delay();
 
-  const applicableMops = mockModesOfOperation
+  const applicableMops = getMockDatabase().modesOfOperation
     .filter(
       (mop) =>
         mop.organisationId === organisationId &&
@@ -123,7 +123,7 @@ export async function getMopByVersion(
 ): Promise<ModeOfOperation> {
   await delay();
 
-  const mop = mockModesOfOperation.find(
+  const mop = getMockDatabase().modesOfOperation.find(
     (item) =>
       item.id === mopId &&
       item.version === version,
@@ -156,7 +156,7 @@ export async function getMopsByOrganisation(
 ): Promise<ModeOfOperation[]> {
   await delay();
 
-  return mockModesOfOperation
+  return getMockDatabase().modesOfOperation
     .filter(
       (mop) =>
         mop.organisationId === organisationId,

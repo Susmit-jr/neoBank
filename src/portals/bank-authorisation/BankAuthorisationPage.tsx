@@ -83,6 +83,7 @@ function BankAuthorisationPage() {
 
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [secondsLeft, setSecondsLeft] = useState(10);
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -169,18 +170,22 @@ useEffect(() => {
 }, []);
   
 useEffect(() => {
-if (step !== "SUCCESS") {
-return;
-}
- 
-const closeTimer = window.setTimeout(() => {
-closeOrReturn();
-}, 3000);
- 
-return () => {
-window.clearTimeout(closeTimer);
-};
+  if (step !== "SUCCESS") {
+    return;
+  }
+
+  const timer = window.setInterval(() => {
+    setSecondsLeft((current) => current - 1);
+  }, 1000);
+
+  return () => window.clearInterval(timer);
 }, [step]);
+
+useEffect(() => {
+  if (step === "SUCCESS" && secondsLeft <= 0) {
+    closeOrReturn();
+  }
+}, [step, secondsLeft]);
 
   async function handleLogin(
     event: SubmitEvent<HTMLFormElement>,
@@ -351,12 +356,17 @@ window.clearTimeout(closeTimer);
             {successMessage}
           </p>
 
+          <p className="mt-6 text-sm text-slate-500">
+            Returning to NeoBank in {Math.max(secondsLeft, 0)} second
+            {secondsLeft === 1 ? "" : "s"}…
+          </p>
+
           <button
             type="button"
             onClick={closeOrReturn}
-            className="mt-8 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
+            className="mt-4 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
           >
-            Return to NeoBank
+            Return to NeoBank now
           </button>
         </section>
       </main>

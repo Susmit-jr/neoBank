@@ -535,6 +535,13 @@ setPageMode("SUCCESS");
           `Role: ${formatLabel(credential.role)}`,
           `Username: ${credential.username}`,
           `Initial Password: ${credential.initialPassword}`,
+          ...(credential.bankCredentials
+            ? [
+                `Bank Corporate ID: ${credential.bankCredentials.corporateId}`,
+                `Bank User ID: ${credential.bankCredentials.bankUserId}`,
+                `Bank Password: ${credential.bankCredentials.password}`,
+              ]
+            : []),
         ].join("\n");
       })
       .join("\n\n");
@@ -844,6 +851,20 @@ setPageMode("SUCCESS");
                   {credential.initialPassword}
                 </p>
               </div>
+
+              {credential.bankCredentials && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Bank authorisation login
+                  </p>
+
+                  <p className="mt-1 break-all text-sm font-semibold text-slate-900">
+                    {credential.bankCredentials.corporateId} /{" "}
+                    {credential.bankCredentials.bankUserId} /{" "}
+                    {credential.bankCredentials.password}
+                  </p>
+                </div>
+              )}
             </div>
           </article>
         ),
@@ -859,7 +880,7 @@ setPageMode("SUCCESS");
 </div>
 
 <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left text-sm leading-6 text-amber-900">
-  These are prototype initial passwords. Share them only
+  These are initial passwords. Share them only
   with the respective users. Bank Admin can view user
   identities and roles but should not be shown passwords.
 </div>

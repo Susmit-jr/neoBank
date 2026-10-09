@@ -1,4 +1,3 @@
-import { mockBankUsers } from "../mock-data/bankUsers";
 import type {
   ApprovalDecision,
   ApprovalRequestStage,
@@ -583,7 +582,7 @@ export async function authenticateBankUser(
     "This bank authorisation session is not available for authentication.",
   );
 }
-  const bankUser = mockBankUsers.find(
+  const bankUser = getMockDatabase().bankUsers.find(
     (item) =>
       item.corporateId.toUpperCase() ===
         input.corporateId.trim().toUpperCase() &&
@@ -773,7 +772,7 @@ export async function approveThroughBank(
 
       actionedByUserId: session.platformUserId,
       actionedByName:
-        mockBankUsers.find(
+        database.bankUsers.find(
           (user) =>
             user.platformUserId ===
             session.platformUserId,
@@ -949,7 +948,7 @@ export async function approvePaymentThroughBank(
       );
     }
 
-    const bankUser = mockBankUsers.find(
+    const bankUser = database.bankUsers.find(
       (item) =>
         item.platformUserId ===
         session.platformUserId,
