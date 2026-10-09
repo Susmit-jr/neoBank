@@ -1,10 +1,11 @@
 import { useState, type SubmitEvent } from "react";
-import { CheckCircle2, Circle, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, Trash2, XCircle } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { trackApplication } from "../../services/onboardingService";
 import type { AccountOpeningApplication } from "../../types/onboarding";
 import { formatDateTime } from "../../utils/dates";
-import { humanise } from "./labels";
+import { getMockDatabase } from "../../services/mockDatabase";
+import { humanise, statusLabel } from "./labels";
 import PublicShell from "./PublicShell";
 
 const inputClass =
@@ -26,6 +27,16 @@ function progressOf(application: AccountOpeningApplication): number {
   }
 }
 
+const HIDDEN_KEY = "neobank_hidden_demo_applications";
+
+function readHidden(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(HIDDEN_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
 function TrackPage() {
   const [params] = useSearchParams();
   const [reference, setReference] = useState(
@@ -36,14 +47,36 @@ function TrackPage() {
     useState<AccountOpeningApplication | null>(null);
   const [message, setMessage] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [hidden, setHidden] = useState<string[]>(readHidden);
+
+  // Every submitted application is listed here automatically for quick checks.
+  const demoApplications = getMockDatabase()
+    .accountOpeningApplications.filter(
+      (item) => item.status !== "DRAFT" && !hidden.includes(item.id),
+    )
+    .sort(
+      (first, second) =>
+        new Date(second.submittedAt ?? second.updatedAt).getTime() -
+        new Date(first.submittedAt ?? first.updatedAt).getTime(),
+    );
+
+  function removeFromList(id: string) {
+    const next = [...hidden, id];
+    setHidden(next);
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify(next));
+  }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    await check(reference, email);
+  }
+
+  async function check(checkReference: string, checkEmail: string) {
     setIsBusy(true);
     setMessage("");
 
     try {
-      const found = await trackApplication(reference, email);
+      const found = await trackApplication(checkReference, checkEmail);
 
       if (!found) {
         setApplication(null);
@@ -120,6 +153,69 @@ function TrackPage() {
           {isBusy ? "Checking..." : "Check status"}
         </button>
       </form>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-slate-900">
+          Demo applications
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Every application submitted in this browser appears here. Select
+          one to check its status.
+        </p>
+
+        {demoApplications.length === 0 ? (
+          <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+            No applications yet. Open an account to see it listed here.
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-slate-100">
+            {demoApplications.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold text-slate-900">
+                    {item.applicationReference}
+                    <span className="ml-2 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                      {statusLabel(item.status)}
+                    </span>
+                  </p>
+                  <p className="truncate text-slate-500">
+                    {item.organisation.legalName} · {item.applicant.workEmail}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReference(item.applicationReference);
+                      setEmail(item.applicant.workEmail);
+                      void check(
+                        item.applicationReference,
+                        item.applicant.workEmail,
+                      );
+                    }}
+                    className="rounded-lg border border-blue-700 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-700 hover:text-white"
+                  >
+                    Use
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item.applicationReference} from the list`}
+                    onClick={() => removeFromList(item.id)}
+                    className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {message && (
         <p
