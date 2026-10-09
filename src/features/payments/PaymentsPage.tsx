@@ -1,3 +1,4 @@
+import ApprovalTimeline from "../../components/status/ApprovalTimeline";
 import {
   AlertCircle,
   CheckCircle2,
@@ -16,6 +17,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { processAllAuthorisedPayments } from "../../services/paymentProcessingService";
 import {
   getPaymentProcessingEvents,
   getPaymentsByOrganisation,
@@ -168,6 +170,8 @@ function PaymentsPage() {
   const [processingEvents, setProcessingEvents] =
     useState<PaymentProcessingEvent[]>([]);
 
+  const selectedId = selectedPayment?.id;
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("ALL");
@@ -215,6 +219,47 @@ function PaymentsPage() {
   useEffect(() => {
     void loadPayments();
   }, [user?.organisationId]);
+
+  // Authorised payments are submitted to the bank and tracked until they settle.
+  useEffect(() => {
+    if (
+      !user?.organisationId ||
+      !payments.some(
+        (payment) =>
+          payment.status === "AUTHORISED" ||
+          payment.status === "PROCESSING",
+      )
+    ) {
+      return;
+    }
+
+    const organisationId = user.organisationId;
+
+    const timer = window.setInterval(async () => {
+      // Picks up AUTHORISED payments once; later ticks only refresh.
+      void processAllAuthorisedPayments();
+
+      const fresh =
+        await getPaymentsByOrganisation(organisationId);
+
+      setPayments(fresh);
+
+      setSelectedPayment((current) =>
+        current
+          ? (fresh.find((item) => item.id === current.id) ??
+            current)
+          : current,
+      );
+
+      if (selectedId) {
+        setProcessingEvents(
+          await getPaymentProcessingEvents(selectedId),
+        );
+      }
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [payments, user?.organisationId, selectedId]);
 
   const filteredPayments = useMemo(() => {
     const normalizedSearch = searchTerm
@@ -776,6 +821,12 @@ function PaymentsPage() {
                   </p>
                 </div>
               )}
+
+              <ApprovalTimeline
+                requestId={selectedPayment.id}
+                createdByName={selectedPayment.createdByName}
+                createdAt={selectedPayment.createdAt}
+              />
 
               <div>
                 <h4 className="text-base font-semibold text-slate-950">

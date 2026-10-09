@@ -341,6 +341,29 @@ export async function processAuthorisedPayment(
 
     storedPayment.utrNumber = utrNumber;
 
+    const debitAccount = updatedDatabase.accounts.find(
+      (item) => item.id === storedPayment.debitAccountId,
+    );
+
+    if (debitAccount) {
+      debitAccount.availableBalance -= storedPayment.amount;
+      debitAccount.ledgerBalance -= storedPayment.amount;
+
+      updatedDatabase.transactions.push({
+        id: crypto.randomUUID(),
+        accountId: debitAccount.id,
+        transactionReference: utrNumber,
+        transactionDate: new Date().toISOString(),
+        valueDate: new Date().toISOString().slice(0, 10),
+        description: storedPayment.paymentPurpose,
+        counterpartyName: storedPayment.beneficiaryName,
+        type: "DEBIT",
+        amount: storedPayment.amount,
+        closingBalance: debitAccount.ledgerBalance,
+        status: "SUCCESSFUL",
+      });
+    }
+
     updatedDatabase.paymentProcessingEvents.push(
       createProcessingEvent(
         storedPayment,
@@ -367,4 +390,23 @@ export async function processAuthorisedPayment(
     message:
       "Transaction completed successfully.",
   };
+}
+
+// Called by neobank pages so processing continues after the bank popup closes.
+// shortcut: always succeeds, replace with the bank's processing callback.
+export async function processAllAuthorisedPayments(): Promise<number> {
+  const authorised = await getAuthorisedPayments();
+
+  for (const payment of authorised) {
+    try {
+      await processAuthorisedPayment({
+        paymentId: payment.id,
+        outcome: "SUCCESSFUL",
+      });
+    } catch {
+      // Already picked up by another page.
+    }
+  }
+
+  return authorised.length;
 }

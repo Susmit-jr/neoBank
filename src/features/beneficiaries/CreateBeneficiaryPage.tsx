@@ -47,6 +47,61 @@ const initialFormData: BeneficiaryFormData = {
   mobileNumber: "",
 };
 
+const sampleBeneficiaries = [
+  {
+    name: "Sterling Packaging Industries Pvt Ltd",
+    code: "STERLING",
+    bank: "HDFC Bank",
+    branch: "Andheri East, Mumbai",
+    ifsc: "HDFC0000314",
+  },
+  {
+    name: "Greenfield Agro Traders",
+    code: "GREENFLD",
+    bank: "ICICI Bank",
+    branch: "Nariman Point, Mumbai",
+    ifsc: "ICIC0000007",
+  },
+  {
+    name: "Bluewave Logistics LLP",
+    code: "BLUEWAVE",
+    bank: "Axis Bank",
+    branch: "Connaught Place, New Delhi",
+    ifsc: "UTIB0000004",
+  },
+  {
+    name: "Nimbus Software Services Pvt Ltd",
+    code: "NIMBUS",
+    bank: "State Bank of India",
+    branch: "Koramangala, Bengaluru",
+    ifsc: "SBIN0001234",
+  },
+];
+
+function buildSampleBeneficiary(): BeneficiaryFormData {
+  const sample =
+    sampleBeneficiaries[
+      Math.floor(Math.random() * sampleBeneficiaries.length)
+    ];
+
+  const accountNumber = String(
+    Math.floor(1e11 + Math.random() * 9e11),
+  );
+
+  return {
+    beneficiaryCode: `${sample.code}${Math.floor(Math.random() * 90 + 10)}`,
+    beneficiaryName: sample.name,
+    accountNumber,
+    confirmAccountNumber: accountNumber,
+    accountType: "CURRENT",
+    bankName: sample.bank,
+    branchName: sample.branch,
+    ifscCode: sample.ifsc,
+    email: `accounts@${sample.code.toLowerCase()}.in`,
+    mobileNumber: `98${Math.floor(1e7 + Math.random() * 9e7)}`,
+  };
+}
+
 function CreateBeneficiaryPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -375,6 +430,19 @@ function CreateBeneficiaryPage() {
             ? "Enter the beneficiary bank-account details."
             : "Verify the details before submitting for authorisation."}
         </p>
+
+        {step === "ENTRY" && (
+          <button
+            type="button"
+            onClick={() => {
+              setFormData(buildSampleBeneficiary());
+              setError("");
+            }}
+            className="mt-4 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Fill sample data
+          </button>
+        )}
       </div>
 
       {error && (

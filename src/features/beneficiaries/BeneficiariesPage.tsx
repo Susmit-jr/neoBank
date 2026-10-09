@@ -1,3 +1,4 @@
+import ApprovalTimeline from "../../components/status/ApprovalTimeline";
 import {
   Building2,
   CheckCircle2,
@@ -752,6 +753,14 @@ function BeneficiariesPage() {
                       ? `Version ${selectedBeneficiary.appliedMopVersion}`
                       : "Not applicable"
                   }
+                />
+              </div>
+
+              <div className="mt-8">
+                <ApprovalTimeline
+                  requestId={selectedBeneficiary.id}
+                  createdByName={selectedBeneficiary.createdByName}
+                  createdAt={selectedBeneficiary.createdAt}
                 />
               </div>
             </div>

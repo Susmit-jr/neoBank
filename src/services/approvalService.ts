@@ -451,3 +451,84 @@ export async function getApprovalTrayItems(
       new Date(first.submittedAt).getTime(),
   );
 }
+
+
+export type TimelineAuthoriser = {
+  userId: string;
+  name: string;
+  role: string;
+  status: "APPROVED" | "REJECTED" | "RETURNED" | "PENDING";
+  actedAt?: string;
+  remarks?: string;
+};
+
+export type ApprovalTimelineStage = {
+  sequence: number;
+  stageName: string;
+  requiredApprovals: number;
+  approvedCount: number;
+  status: ApprovalRequestStage["status"];
+  authorisers: TimelineAuthoriser[];
+};
+
+export function getApprovalTimeline(
+  requestId: string,
+): ApprovalTimelineStage[] {
+  const database = getMockDatabase();
+
+  return database.approvalStages
+    .filter((stage) => stage.requestId === requestId)
+    .sort(
+      (first, second) =>
+        first.stageSequence - second.stageSequence,
+    )
+    .map((stage) => {
+      const decisions = getStageDecisions(
+        stage,
+        database.approvalDecisions,
+      );
+
+      return {
+        sequence: stage.stageSequence,
+        stageName: stage.stageName,
+        requiredApprovals: stage.requiredApprovals,
+        approvedCount: getStageApprovalCount(
+          stage,
+          database.approvalDecisions,
+        ),
+        status: stage.status,
+        authorisers: stage.eligibleUserIds.flatMap(
+          (userId) => {
+            const eligibleUser = database.users.find(
+              (item) => item.id === userId,
+            );
+
+            if (!eligibleUser) {
+              return [];
+            }
+
+            const decision = decisions.find(
+              (item) => item.actionedByUserId === userId,
+            );
+
+            return [
+              {
+                userId,
+                name: eligibleUser.fullName,
+                role: eligibleUser.role
+                  .split("_")
+                  .map(
+                    (word) =>
+                      word[0] + word.slice(1).toLowerCase(),
+                  )
+                  .join(" "),
+                status: decision?.action ?? "PENDING",
+                actedAt: decision?.actionedAt,
+                remarks: decision?.remarks,
+              } as TimelineAuthoriser,
+            ];
+          },
+        ),
+      };
+    });
+}
