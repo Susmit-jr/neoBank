@@ -42,6 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const result = await loginUser(credentials);
 
     if (result.success && result.user) {
+      sessionStorage.removeItem(SIGNED_OUT_KEY);
       setUser(result.user);
     }
 
@@ -49,6 +50,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   function logout() {
+    // Lets the route guard send a signed-out user home instead of to a login screen.
+    sessionStorage.setItem(SIGNED_OUT_KEY, "1");
     logoutUser();
     setUser(null);
   }
@@ -69,6 +72,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     </AuthContext.Provider>
   );
 }
+
+export const SIGNED_OUT_KEY = "neobank_just_signed_out";
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);

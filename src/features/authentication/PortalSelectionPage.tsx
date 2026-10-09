@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { PortalType } from "../../types/auth";
+import { SIGNED_OUT_KEY } from "../../store/AuthContext";
 import LoginDialog from "./LoginDialog";
 
 const features = [
@@ -52,6 +53,11 @@ function PortalSelectionPage({
   useEffect(() => {
     setLoginPortal(openPortal);
   }, [openPortal]);
+
+  // Arriving here ends the post-sign-out redirect.
+  useEffect(() => {
+    sessionStorage.removeItem(SIGNED_OUT_KEY);
+  }, []);
 
   function closeLogin() {
     setLoginPortal(null);

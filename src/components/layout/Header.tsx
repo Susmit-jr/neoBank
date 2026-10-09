@@ -1,6 +1,7 @@
 import { Bell, ChevronDown, LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { Notifications } from "../../features/notifications/useNotifications";
+import { getMockDatabase } from "../../services/mockDatabase";
 import { formatDateTime } from "../../utils/dates";
 import { useEffect, useRef, useState } from "react";
 import type {
@@ -37,6 +38,9 @@ function Header({
   notifications,
 }: HeaderProps) {
   const navigate = useNavigate();
+  const cifId = getMockDatabase().organisations.find(
+    (item) => item.id === user.organisationId,
+  )?.cifId;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBellOpen, setIsBellOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -219,6 +223,11 @@ function Header({
                   {user.organisationName && (
                     <p className="mt-3 text-xs leading-5 text-[var(--text-secondary)]">
                       {user.organisationName}
+                      {cifId && (
+                        <span className="block font-semibold">
+                          CIF ID {cifId}
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>

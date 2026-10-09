@@ -52,6 +52,21 @@ function ApplicationSummary({
 
   return (
     <div className="space-y-5">
+      {application.openedAccount && (
+        <Section title="Account opened">
+          <Facts
+            items={[
+              ["CIF ID", application.openedAccount.cifId],
+              ["Account number", application.openedAccount.accountNumber],
+              ["Corporate ID", application.openedAccount.corporateId],
+              ["IFSC", application.openedAccount.ifscCode],
+              ["Branch", application.openedAccount.branchName],
+              ["Account type", humanise(application.openedAccount.accountType)],
+            ]}
+          />
+        </Section>
+      )}
+
       <Section title="Applicant">
         <Facts
           items={[

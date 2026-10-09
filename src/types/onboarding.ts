@@ -217,6 +217,7 @@ export type OpenedAccountDetails = {
   accountType: RequestedAccountType;
 
   corporateId: string;
+  cifId: string;
 
   branchName: string;
   ifscCode: string;

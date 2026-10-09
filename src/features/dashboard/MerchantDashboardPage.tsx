@@ -94,6 +94,15 @@ function isDateInCurrentMonth(
 function MerchantDashboardPage() {
   const { user } = useAuth();
 
+  const organisationRecord = getMockDatabase().organisations.find(
+    (item) => item.id === user?.organisationId,
+  );
+  const cifId = organisationRecord?.cifId ?? "-";
+  const primaryAccountNumber =
+    getMockDatabase().accounts.find(
+      (account) => account.id === organisationRecord?.primaryAccountId,
+    )?.accountNumber ?? "-";
+
   const [dashboardData, setDashboardData] =
     useState<DashboardData>({
       accounts: [],
@@ -472,12 +481,19 @@ detail:
           </p>
 
           <p className="mt-5 text-sm text-slate-600">
-            Organisation ID
+            CIF ID
           </p>
 
-          <p className="mt-1 break-all font-semibold text-slate-950">
-            {user?.organisationId ??
-              "Not available"}
+          <p className="mt-1 font-semibold text-slate-950">
+            {cifId}
+          </p>
+
+          <p className="mt-5 text-sm text-slate-600">
+            Primary account
+          </p>
+
+          <p className="mt-1 font-mono font-semibold text-slate-950">
+            {primaryAccountNumber}
           </p>
 
           <p className="mt-5 text-sm text-slate-600">

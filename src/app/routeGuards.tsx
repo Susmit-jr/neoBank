@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../store/AuthContext";
+import { SIGNED_OUT_KEY, useAuth } from "../store/AuthContext";
 import type { PortalType, UserRole } from "../types/auth";
 
 type ProtectedRouteProps = {
@@ -34,6 +34,10 @@ export function ProtectedRoute({
   const { user, isAuthenticated } = useAuth();
 
   if (!isAuthenticated || !user) {
+    if (sessionStorage.getItem(SIGNED_OUT_KEY)) {
+      return <Navigate to="/" replace />;
+    }
+
     const expectedPortal = allowedPortals?.[0];
 
     return (

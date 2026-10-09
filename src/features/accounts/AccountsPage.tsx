@@ -17,6 +17,7 @@ import {
   getAccountsByOrganisation,
   getTransactionsByOrganisation,
 } from "../../services/accountService";
+import { getMockDatabase } from "../../services/mockDatabase";
 import { useAuth } from "../../store/AuthContext";
 import type {
   AccountTransaction,
@@ -193,6 +194,11 @@ function AccountsPage() {
     );
   }
 
+  const cifId =
+    getMockDatabase().organisations.find(
+      (item) => item.id === user?.organisationId,
+    )?.cifId ?? "-";
+
   return (
     <section className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -357,9 +363,12 @@ function AccountsPage() {
                 <div className="grid gap-5 text-sm sm:grid-cols-2">
                   <AccountDetail
                     label="Account number"
-                    value={
-                      account.maskedAccountNumber
-                    }
+                    value={account.accountNumber}
+                  />
+
+                  <AccountDetail
+                    label="CIF ID"
+                    value={cifId}
                   />
 
                   <AccountDetail

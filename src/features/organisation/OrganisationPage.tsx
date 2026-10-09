@@ -68,6 +68,7 @@ function OrganisationPage() {
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
             {(
               [
+                ["CIF ID", organisation?.cifId],
                 ["Corporate ID", organisation?.corporateId],
                 [
                   "Type of company",
@@ -95,6 +96,39 @@ function OrganisationPage() {
               </div>
             ))}
           </dl>
+        </Panel>
+
+        <Panel
+          title="Accounts"
+          description="Your accounts with their numbers"
+        >
+          <ul className="divide-y divide-slate-100">
+            {accounts.map((account) => (
+              <li
+                key={account.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {account.accountName}
+                    {account.isPrimary && (
+                      <span className="ml-2 rounded-md bg-[var(--brand-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--brand-primary)]">
+                        Primary
+                      </span>
+                    )}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {humanise(account.accountType)} · {account.branchName} ·
+                    IFSC {account.ifscCode}
+                  </p>
+                </div>
+
+                <p className="font-mono text-sm font-semibold tracking-wide text-slate-900">
+                  {account.accountNumber}
+                </p>
+              </li>
+            ))}
+          </ul>
         </Panel>
 
         <Panel

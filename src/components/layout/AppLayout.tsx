@@ -51,8 +51,9 @@ function AppLayout({
   }
 
   function handleLogout() {
+    // Leave first so the route guard does not bounce to a login screen.
+    navigate("/", { replace: true });
     logout();
-    navigate("/");
   }
 
   const pageMeta = getPageMeta(portal, location.pathname, {

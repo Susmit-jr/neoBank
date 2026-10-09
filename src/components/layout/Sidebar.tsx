@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { getMockDatabase } from "../../services/mockDatabase";
 import IndusIndLogo from "../branding/IndusIndLogo";
 import { portalThemes } from "../../design-system/portalTheme";
 import type {
@@ -144,6 +145,9 @@ function Sidebar({
       (!item.roles || item.roles.includes(user.role)),
   );
   const theme = portalThemes[portal];
+  const cifId = getMockDatabase().organisations.find(
+    (item) => item.id === user.organisationId,
+  )?.cifId;
 
   return (
     <>
@@ -282,6 +286,12 @@ function Sidebar({
             <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
               {user.email}
             </p>
+
+            {cifId && (
+              <p className="mt-2 text-[11px] font-semibold text-[var(--text-secondary)]">
+                CIF ID {cifId}
+              </p>
+            )}
 
             <div className="mt-3 inline-flex rounded-md bg-[var(--brand-soft)] px-2 py-1 text-[11px] font-semibold text-[var(--brand-primary)]">
               {user.role.replaceAll("_", " ")}

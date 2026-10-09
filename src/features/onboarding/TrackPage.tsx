@@ -286,8 +286,9 @@ function TrackPage() {
             <section className="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold">Your account is open</h2>
 
-              <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+              <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
+                  ["CIF ID", application.openedAccount.cifId],
                   ["Account number", application.openedAccount.accountNumber],
                   ["IFSC", application.openedAccount.ifscCode],
                   ["Corporate ID", application.openedAccount.corporateId],

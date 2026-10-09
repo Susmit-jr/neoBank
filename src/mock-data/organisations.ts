@@ -14,6 +14,7 @@ export const mockMerchantOrganisations: MerchantOrganisation[] = [
     natureOfBusiness: "Industrial supplies and distribution",
     registeredAddress: "Unit 4, Andheri Industrial Estate, Mumbai 400093",
     corporateId: "ACME001",
+    cifId: "7305182946",
     primaryAccountId: "ACC-001",
     enabledServices: [
       "CORPORATE_NET_BANKING",

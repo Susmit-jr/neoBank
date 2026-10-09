@@ -1075,6 +1075,22 @@ function generateCorporateId(): string {
   return `CORP${randomPart}`;
 }
 
+// A unique 10-digit customer identification number for the company.
+function generateCifId(): string {
+  const taken = new Set(
+    getMockDatabase().organisations.map((organisation) => organisation.cifId),
+  );
+
+  const next = (): string => String(Math.floor(1e9 + Math.random() * 9e9));
+  let cifId = next();
+
+  while (taken.has(cifId)) {
+    cifId = next();
+  }
+
+  return cifId;
+}
+
 function maskOpenedAccountNumber(
   accountNumber: string,
 ): string {
@@ -1242,6 +1258,7 @@ export async function completeMerchantOnboarding(
     maskOpenedAccountNumber(accountNumber);
 
   const corporateId = generateCorporateId();
+  const cifId = generateCifId();
 
   const completionTime =
     new Date().toISOString();
@@ -1342,6 +1359,7 @@ export async function completeMerchantOnboarding(
           .registeredAddress,
 
       corporateId,
+      cifId,
 
       primaryAccountId: bankAccountId,
 
@@ -1543,6 +1561,7 @@ storedApplication.proposedNeoBankUsers.forEach(
           .accountType,
 
       corporateId,
+      cifId,
 
       branchName:
         storedApplication.newAccountRequirement

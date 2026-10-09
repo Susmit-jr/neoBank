@@ -24,6 +24,7 @@ export type MerchantOrganisation = {
   registeredAddress: string;
 
   corporateId: string;
+  cifId: string;
 
   primaryAccountId: string;
   enabledServices: BankingService[];
