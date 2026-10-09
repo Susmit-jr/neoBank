@@ -174,7 +174,7 @@ function Sidebar({
         }`}
       >
         <div
-          className={`flex h-20 items-center border-b border-[var(--border-subtle)] ${
+          className={`flex h-16 items-center border-b border-[var(--border-subtle)] ${
             isCollapsed ? "justify-center px-3" : "justify-between px-5"
           }`}
         >
@@ -228,7 +228,7 @@ function Sidebar({
 
         <nav
           aria-label={`${theme.workspace} navigation`}
-          className={`flex-1 overflow-y-auto py-6 ${
+          className={`flex-1 overflow-y-auto py-4 ${
             isCollapsed ? "px-3" : "px-4"
           }`}
         >
@@ -249,7 +249,7 @@ function Sidebar({
                   onClick={onClose}
                   title={isCollapsed ? item.label : undefined}
                   className={({ isActive }) =>
-                    `group relative flex items-center rounded-xl py-3 text-sm font-semibold transition ${
+                    `group relative flex items-center rounded-xl py-2.5 text-sm font-semibold transition ${
                       isCollapsed
                         ? "justify-center px-2"
                         : "gap-3 px-3"

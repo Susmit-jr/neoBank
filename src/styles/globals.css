@@ -58,6 +58,11 @@
   --selection: #f3dcdd;
 }
 
+/* A touch smaller than the browser default so screens fit with less scrolling. */
+html {
+  font-size: 14.5px;
+}
+
 * {
   box-sizing: border-box;
 }

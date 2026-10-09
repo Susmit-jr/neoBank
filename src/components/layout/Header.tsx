@@ -80,7 +80,7 @@ function Header({
 
   return (
     <header className="sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-[color:var(--header-surface)] backdrop-blur-xl">
-      <div className="flex min-h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-4">
           <button
             type="button"
