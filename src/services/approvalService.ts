@@ -124,7 +124,7 @@ export function areAllApprovalStagesComplete(
   );
 }
 
-export type RequestKind = "BENEFICIARY" | "PAYMENT";
+export type RequestKind = "BENEFICIARY" | "PAYMENT" | "FUNDING";
 
 export type RejectRequestInput = {
   requestKind: RequestKind;
@@ -157,9 +157,13 @@ function findRequest(
       ? database.payments.find(
           (item) => item.id === requestId,
         )
-      : database.beneficiaries.find(
-          (item) => item.id === requestId,
-        );
+      : requestKind === "FUNDING"
+        ? database.fundingRequests.find(
+            (item) => item.id === requestId,
+          )
+        : database.beneficiaries.find(
+            (item) => item.id === requestId,
+          );
 
   if (!request) {
     throw new Error("The request could not be found.");
@@ -177,8 +181,12 @@ function findRequest(
 function getReference(
   request: ReturnType<typeof findRequest>,
 ): string {
-  return "paymentReference" in request
-    ? request.paymentReference
+  if ("paymentReference" in request) {
+    return request.paymentReference;
+  }
+
+  return "fundingReference" in request
+    ? request.fundingReference
     : request.beneficiaryReference;
 }
 
@@ -306,9 +314,13 @@ export async function rejectRequest(
         ? updatedDatabase.payments.find(
             (item) => item.id === input.requestId,
           )
-        : updatedDatabase.beneficiaries.find(
-            (item) => item.id === input.requestId,
-          );
+        : input.requestKind === "FUNDING"
+          ? updatedDatabase.fundingRequests.find(
+              (item) => item.id === input.requestId,
+            )
+          : updatedDatabase.beneficiaries.find(
+              (item) => item.id === input.requestId,
+            );
 
     if (stored) {
       stored.status = "REJECTED";
@@ -324,7 +336,9 @@ export async function rejectRequest(
     message:
       input.requestKind === "PAYMENT"
         ? "The payment has been rejected and cancelled. The maker must initiate it again."
-        : "The beneficiary request has been rejected and cancelled. The maker must submit it again.",
+        : input.requestKind === "FUNDING"
+          ? "The add balance request has been rejected and cancelled. The maker must submit it again."
+          : "The beneficiary request has been rejected and cancelled. The maker must submit it again.",
   };
 }
 
@@ -376,9 +390,13 @@ export async function cancelRequest(input: {
         ? updatedDatabase.payments.find(
             (item) => item.id === input.requestId,
           )
-        : updatedDatabase.beneficiaries.find(
-            (item) => item.id === input.requestId,
-          );
+        : input.requestKind === "FUNDING"
+          ? updatedDatabase.fundingRequests.find(
+              (item) => item.id === input.requestId,
+            )
+          : updatedDatabase.beneficiaries.find(
+              (item) => item.id === input.requestId,
+            );
 
     if (stored) {
       stored.status = "CANCELLED";
@@ -503,6 +521,37 @@ export async function getApprovalTrayItems(
           submittedAt:
             payment.submittedAt ??
             payment.createdAt,
+
+          approvalStage,
+          decisions,
+        };
+      }
+
+      if (approvalStage.requestType === "ADD_BALANCE") {
+        const funding = database.fundingRequests.find(
+          (item) => item.id === approvalStage.requestId,
+        );
+
+        if (!funding) {
+          return null;
+        }
+
+        return {
+          requestType: "FUNDING",
+
+          requestId: funding.id,
+          requestReference: funding.fundingReference,
+          organisationId: funding.organisationId,
+
+          title: "Add balance",
+          subtitle: `${funding.sourceBankName} ${funding.maskedSourceAccountNumber} | to ${funding.maskedCreditAccountNumber}`,
+
+          amount: funding.amount,
+          currency: funding.currency,
+
+          requestStatus: funding.status,
+
+          submittedAt: funding.submittedAt,
 
           approvalStage,
           decisions,

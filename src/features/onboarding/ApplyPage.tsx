@@ -93,7 +93,7 @@ function buildRules(
     .map((user) => user.id);
 
   const rule = (
-    operationType: "BENEFICIARY_CREATION" | "PAYMENT",
+    operationType: "BENEFICIARY_CREATION" | "PAYMENT" | "ADD_BALANCE",
     stageName: string,
     approvals: number,
   ) => ({
@@ -120,6 +120,7 @@ function buildRules(
       beneficiaryApprovals,
     ),
     rule("PAYMENT", "Payment Authorisation", paymentApprovals),
+    rule("ADD_BALANCE", "Add Balance Authorisation", paymentApprovals),
   ];
 }
 

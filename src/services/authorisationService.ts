@@ -9,6 +9,7 @@ import {
   updateMockDatabase,
 } from "./mockDatabase";
 
+import type { FundingRequest } from "../types/funding";
 import type { Payment } from "../types/payment";
 
 const SESSION_VALIDITY_MINUTES = 10;
@@ -44,6 +45,14 @@ export type BankSessionDetails = (
       session: BankAuthorisationSession;
       beneficiary?: never;
       payment: Payment;
+      approvalStage: ApprovalRequestStage;
+    }
+  | {
+      requestType: "ADD_BALANCE";
+      session: BankAuthorisationSession;
+      beneficiary?: never;
+      payment?: never;
+      funding: FundingRequest;
       approvalStage: ApprovalRequestStage;
     }
 ) & { authorisers: StageAuthoriser[] };
@@ -397,6 +406,153 @@ export async function createPaymentBankAuthorisationSession(
   return session;
 }
 
+export async function createFundingBankAuthorisationSession(
+  fundingId: string,
+  platformUserId: string,
+): Promise<BankAuthorisationSession> {
+  await delay();
+
+  const database = getMockDatabase();
+
+  const funding = database.fundingRequests.find(
+    (item) => item.id === fundingId,
+  );
+
+  if (!funding) {
+    throw new Error(
+      "The add balance request could not be found.",
+    );
+  }
+
+  const actionableStatuses = [
+    "PENDING_AUTHORISATION",
+    "AUTHORISATION_IN_PROGRESS",
+    "AWAITING_NEXT_AUTHORISER",
+  ];
+
+  if (!actionableStatuses.includes(funding.status)) {
+    throw new Error(
+      "This request is not available for authorisation.",
+    );
+  }
+
+  if (funding.createdByUserId === platformUserId) {
+    throw new Error(
+      "The Maker cannot authorise their own request.",
+    );
+  }
+
+  const currentStage = database.approvalStages
+    .filter(
+      (stage) =>
+        stage.requestId === fundingId &&
+        stage.requestType === "ADD_BALANCE" &&
+        (stage.status === "PENDING" ||
+          stage.status === "IN_PROGRESS"),
+    )
+    .sort(
+      (first, second) =>
+        first.stageSequence - second.stageSequence,
+    )[0];
+
+  if (!currentStage) {
+    throw new Error(
+      "No pending approval stage exists for this request.",
+    );
+  }
+
+  if (!currentStage.eligibleUserIds.includes(platformUserId)) {
+    throw new Error(
+      "You are not eligible to authorise the current approval stage.",
+    );
+  }
+
+  const alreadyActioned =
+    database.approvalDecisions.some(
+      (decision) =>
+        decision.approvalRequestStageId ===
+          currentStage.id &&
+        decision.actionedByUserId === platformUserId,
+    );
+
+  if (alreadyActioned) {
+    throw new Error(
+      "You have already actioned this authorisation stage.",
+    );
+  }
+
+  const existingUsableSession =
+    database.bankAuthorisationSessions.find(
+      (session) =>
+        session.requestId === fundingId &&
+        session.requestType === "ADD_BALANCE" &&
+        session.platformUserId === platformUserId &&
+        session.approvalRequestStageId ===
+          currentStage.id &&
+        (session.status === "CREATED" ||
+          session.status === "AUTHENTICATED") &&
+        !isSessionExpired(session),
+    );
+
+  if (existingUsableSession) {
+    return existingUsableSession;
+  }
+
+  const now = new Date();
+
+  const expiresAt = new Date(
+    now.getTime() +
+      SESSION_VALIDITY_MINUTES * 60 * 1000,
+  );
+
+  const session: BankAuthorisationSession = {
+    id: crypto.randomUUID(),
+
+    requestId: funding.id,
+    requestReference: funding.fundingReference,
+    requestType: "ADD_BALANCE",
+
+    organisationId: funding.organisationId,
+    platformUserId,
+
+    approvalRequestStageId: currentStage.id,
+    stageSequence: currentStage.stageSequence,
+
+    status: "CREATED",
+
+    createdAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+  };
+
+  updateMockDatabase((updatedDatabase) => {
+    updatedDatabase.bankAuthorisationSessions.push(
+      session,
+    );
+
+    const storedStage =
+      updatedDatabase.approvalStages.find(
+        (stage) => stage.id === currentStage.id,
+      );
+
+    if (storedStage) {
+      storedStage.status = "IN_PROGRESS";
+      storedStage.startedAt ??= now.toISOString();
+    }
+
+    const storedFunding =
+      updatedDatabase.fundingRequests.find(
+        (item) => item.id === funding.id,
+      );
+
+    if (storedFunding) {
+      storedFunding.status =
+        "AUTHORISATION_IN_PROGRESS";
+    }
+  });
+
+  return session;
+}
+
 // An unfinished, unexpired session lets the checker resume instead of starting again.
 export function getOpenBankSession(
   requestId: string,
@@ -545,6 +701,26 @@ export async function getBankSessionDetails(
       requestType: "PAYMENT",
       session,
       payment,
+      approvalStage,
+      authorisers,
+    };
+  }
+
+  if (session.requestType === "ADD_BALANCE") {
+    const funding = database.fundingRequests.find(
+      (item) => item.id === session.requestId,
+    );
+
+    if (!funding) {
+      throw new Error(
+        "The add balance request could not be found.",
+      );
+    }
+
+    return {
+      requestType: "ADD_BALANCE",
+      session,
+      funding,
       approvalStage,
       authorisers,
     };
@@ -1050,6 +1226,208 @@ export async function approvePaymentThroughBank(
   if (!result) {
     throw new Error(
       "The payment authorisation result could not be determined.",
+    );
+  }
+
+  return result;
+}
+
+export type CompleteFundingAuthorisationResult = {
+  funding: FundingRequest;
+  nextStageExists: boolean;
+  message: string;
+};
+
+export async function approveFundingThroughBank(
+  sessionId: string,
+): Promise<CompleteFundingAuthorisationResult> {
+  await delay();
+
+  let result:
+    | CompleteFundingAuthorisationResult
+    | undefined;
+
+  updateMockDatabase((database) => {
+    const session =
+      database.bankAuthorisationSessions.find(
+        (item) => item.id === sessionId,
+      );
+
+    if (!session) {
+      throw new Error(
+        "The bank authorisation session could not be found.",
+      );
+    }
+
+    if (session.requestType !== "ADD_BALANCE") {
+      throw new Error(
+        "This session is not associated with an add balance request.",
+      );
+    }
+
+    if (session.status !== "AUTHENTICATED") {
+      throw new Error(
+        "Bank authentication must be completed before authorisation.",
+      );
+    }
+
+    if (isSessionExpired(session)) {
+      session.status = "EXPIRED";
+
+      throw new Error(
+        "The bank authorisation session has expired.",
+      );
+    }
+
+    const funding = database.fundingRequests.find(
+      (item) =>
+        item.id === session.requestId,
+    );
+
+    const currentStage =
+      database.approvalStages.find(
+        (stage) =>
+          stage.id ===
+          session.approvalRequestStageId,
+      );
+
+    if (!funding || !currentStage) {
+      throw new Error(
+        "The authorisation details are incomplete.",
+      );
+    }
+
+    const duplicateDecision =
+      database.approvalDecisions.some(
+        (decision) =>
+          decision.approvalRequestStageId ===
+            currentStage.id &&
+          decision.actionedByUserId ===
+            session.platformUserId,
+      );
+
+    if (duplicateDecision) {
+      throw new Error(
+        "This authoriser has already actioned the current stage.",
+      );
+    }
+
+    const bankUser = database.bankUsers.find(
+      (item) =>
+        item.platformUserId ===
+        session.platformUserId,
+    );
+
+    const actionedAt = new Date().toISOString();
+
+    const decision: ApprovalDecision = {
+      id: crypto.randomUUID(),
+
+      approvalRequestStageId:
+        currentStage.id,
+
+      requestId: funding.id,
+      requestReference:
+        funding.fundingReference,
+
+      stageId: currentStage.stageId,
+      stageSequence:
+        currentStage.stageSequence,
+
+      action: "APPROVED",
+
+      actionedByUserId:
+        session.platformUserId,
+
+      actionedByName:
+        bankUser?.fullName ??
+        "Bank Authoriser",
+
+      actionedAt,
+
+      bankAuthorisationSessionId:
+        session.id,
+    };
+
+    database.approvalDecisions.push(decision);
+
+    session.status = "APPROVED";
+    session.completedAt = actionedAt;
+
+    const approvalCount =
+      countStageApprovals(
+        currentStage.id,
+        database.approvalDecisions,
+      );
+
+    if (
+      approvalCount <
+      currentStage.requiredApprovals
+    ) {
+      currentStage.status = "IN_PROGRESS";
+
+      funding.status =
+        "PENDING_AUTHORISATION";
+
+      result = {
+        funding: structuredClone(funding),
+        nextStageExists: false,
+        message: awaitingMessage(database, currentStage, approvalCount),
+      };
+
+      return;
+    }
+
+    currentStage.status = "COMPLETED";
+    currentStage.completedAt = actionedAt;
+
+    const nextStage =
+      database.approvalStages
+        .filter(
+          (stage) =>
+            stage.requestId === funding.id &&
+            stage.requestType === "ADD_BALANCE" &&
+            stage.stageSequence >
+              currentStage.stageSequence &&
+            stage.status === "PENDING",
+        )
+        .sort(
+          (first, second) =>
+            first.stageSequence -
+            second.stageSequence,
+        )[0];
+
+    if (nextStage) {
+      funding.status =
+        "AWAITING_NEXT_AUTHORISER";
+
+      funding.currentApprovalStageSequence =
+        nextStage.stageSequence;
+
+      result = {
+        funding: structuredClone(funding),
+        nextStageExists: true,
+        message:
+          "Request proceeded for further authorisation.",
+      };
+
+      return;
+    }
+
+    funding.status = "AUTHORISED";
+    funding.authorisedAt = actionedAt;
+
+    result = {
+      funding: structuredClone(funding),
+      nextStageExists: false,
+      message:
+        "Authorisation completed. The money will be added to your account shortly.",
+    };
+  });
+
+  if (!result) {
+    throw new Error(
+      "The authorisation result could not be determined.",
     );
   }
 

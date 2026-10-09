@@ -2,7 +2,8 @@ export type OperationType =
   | "BENEFICIARY_CREATION"
   | "BENEFICIARY_MODIFICATION"
   | "BENEFICIARY_DEACTIVATION"
-  | "PAYMENT";
+  | "PAYMENT"
+  | "ADD_BALANCE";
 
 export type MopStatus = "ACTIVE" | "INACTIVE";
 
@@ -111,7 +112,8 @@ export type BankAuthorisationSession = {
 
 export type ApprovalTrayRequestType =
   | "BENEFICIARY"
-  | "PAYMENT";
+  | "PAYMENT"
+  | "FUNDING";
 
 export type ApprovalTrayItem = {
   requestType: ApprovalTrayRequestType;

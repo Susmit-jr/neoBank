@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getPageMeta } from "../../design-system/portalTheme";
+import { processAllAuthorisedFunding } from "../../services/fundingService";
 import { processAllAuthorisedPayments } from "../../services/paymentProcessingService";
 import { useAuth } from "../../store/AuthContext";
 import type { PortalType } from "../../types/auth";
@@ -33,7 +34,10 @@ function AppLayout({
     }
 
     const timer = window.setInterval(
-      () => void processAllAuthorisedPayments(),
+      () => {
+        void processAllAuthorisedPayments();
+        void processAllAuthorisedFunding();
+      },
       2000,
     );
 

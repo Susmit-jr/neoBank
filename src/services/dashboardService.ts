@@ -71,6 +71,9 @@ export function getDashboardSnapshot(): DashboardSnapshot {
   const paymentsPending = payments.filter((payment) =>
     OPEN_STATUSES.includes(payment.status),
   ).length;
+  const fundingPending = database.fundingRequests.filter((item) =>
+    OPEN_STATUSES.includes(item.status),
+  ).length;
   const beneficiariesPending = database.beneficiaries.filter(
     (beneficiary) => OPEN_STATUSES.includes(beneficiary.status),
   ).length;
@@ -92,7 +95,8 @@ export function getDashboardSnapshot(): DashboardSnapshot {
     organisationsThisMonth: database.organisations.filter(
       (item) => new Date(item.activatedAt) >= monthStart,
     ).length,
-    pendingAuthorisations: paymentsPending + beneficiariesPending,
+    pendingAuthorisations:
+      paymentsPending + beneficiariesPending + fundingPending,
     paymentsPendingAuthorisation: paymentsPending,
     beneficiariesPendingAuthorisation: beneficiariesPending,
     successfulPayments: successful.length,

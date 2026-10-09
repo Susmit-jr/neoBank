@@ -23,6 +23,8 @@ Open http://localhost:8443. Use **Log in as** at the top right of the home page;
 5. **Business Banking** (Maker, Checker 1, Checker 2): add beneficiaries and make payments. A maker prepares; checkers authorise in any order.
 6. **Authorise on the bank window**: each checker signs in to the IndusInd Bank window (credentials plus OTP `123456`), sees only that transaction, and approves. The payment moves on once every required checker has approved.
 
+7. **Add balance**: a maker raises a request to move money from a linked bank account into the business account; checkers authorise it on the same bank window; the funds are credited and a "Funds added" transaction appears.
+
 Rules built in: a rejection cancels the transaction for good; a maker can cancel before any checker acts; an unfinished bank window can be resumed; sessions expire after 10 minutes; a new beneficiary is limited to ₹10,000 for the first hour.
 
 ## Code map

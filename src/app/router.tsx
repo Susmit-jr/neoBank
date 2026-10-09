@@ -28,6 +28,8 @@ import ApplyPage from "../features/onboarding/ApplyPage";
 import TrackPage from "../features/onboarding/TrackPage";
 import ApplicationQueuePage from "../features/onboarding/ApplicationQueuePage";
 import ApplicationReviewPage from "../features/onboarding/ApplicationReviewPage";
+import AddBalancePage from "../features/funding/AddBalancePage";
+import CreateAddBalancePage from "../features/funding/CreateAddBalancePage";
 import OrganisationPage from "../features/organisation/OrganisationPage";
 import AuditPage from "../features/audit/AuditPage";
 import BankAuthorisationsPage from "../features/authorisations/BankAuthorisationsPage";
@@ -235,6 +237,21 @@ export const router = createBrowserRouter([
             ]}
           >
             <CreatePaymentPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "add-balance",
+        element: <AddBalancePage />,
+      },
+      {
+        path: "add-balance/new",
+        element: (
+          <ProtectedRoute
+            allowedPortals={["MERCHANT"]}
+            allowedRoles={["MAKER", "CORPORATE_ADMIN"]}
+          >
+            <CreateAddBalancePage />
           </ProtectedRoute>
         ),
       },

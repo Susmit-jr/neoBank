@@ -118,7 +118,8 @@ export type OnboardingOperationType =
   | "BENEFICIARY_CREATION"
   | "BENEFICIARY_MODIFICATION"
   | "BENEFICIARY_DEACTIVATION"
-  | "PAYMENT";
+  | "PAYMENT"
+  | "ADD_BALANCE";
 
 export type ProposedMopStage = {
   id: string;

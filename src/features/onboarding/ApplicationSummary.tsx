@@ -150,7 +150,9 @@ function ApplicationSummary({
               <span className="font-semibold">
                 {rule.operationType === "PAYMENT"
                   ? "Payments"
-                  : "Adding a beneficiary"}
+                  : rule.operationType === "ADD_BALANCE"
+                    ? "Adding balance"
+                    : "Adding a beneficiary"}
                 :
               </span>{" "}
               {rule.stages.map((stage) => (

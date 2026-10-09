@@ -96,4 +96,28 @@ export const mockModesOfOperation: ModeOfOperation[] = [
 
     effectiveFrom: "2026-01-01",
   },
+
+  {
+    id: "MOP-ORG-001-FUND-001",
+    organisationId: "ORG-001",
+    mopReference: "MOP-ADD-BALANCE-001",
+    version: 1,
+    status: "ACTIVE",
+    operationType: "ADD_BALANCE",
+
+    stages: [
+      {
+        id: "MOP-FUND-STAGE-001",
+        sequence: 1,
+        stageName: "Add Balance Authorisation",
+        requiredApprovals: 2,
+        eligibleUserIds: [
+          "USR-MERCHANT-003",
+          "USR-MERCHANT-004",
+        ],
+      },
+    ],
+
+    effectiveFrom: "2026-01-01",
+  },
 ];

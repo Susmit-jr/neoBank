@@ -22,6 +22,7 @@ import { useParams } from "react-router-dom";
 import IndusIndLogo from "../../components/branding/IndusIndLogo";
 import { getMockDatabase } from "../../services/mockDatabase";
 import {
+  approveFundingThroughBank,
   approvePaymentThroughBank,
   approveThroughBank,
   authenticateBankUser,
@@ -334,6 +335,17 @@ useEffect(() => {
   setIsSubmitting(true);
 
   try {
+    if (details.requestType === "ADD_BALANCE") {
+      const result = await approveFundingThroughBank(sessionId);
+
+      setSuccessMessage(result.message);
+      setStep("SUCCESS");
+
+      postResultToParent(result.funding.status, result.message);
+
+      return;
+    }
+
     if (details.requestType === "PAYMENT") {
       const result =
         await approvePaymentThroughBank(
@@ -705,9 +717,28 @@ useEffect(() => {
   }
 
   const isPayment = details.requestType === "PAYMENT";
+  const subject =
+    details.requestType === "ADD_BALANCE"
+      ? "request"
+      : isPayment
+        ? "payment"
+        : "beneficiary";
 
   const items: [string, string][] =
-    details.requestType === "BENEFICIARY_CREATION"
+    details.requestType === "ADD_BALANCE"
+      ? [
+          ["Request reference", details.funding.fundingReference],
+          ["Amount to add", formatCurrency(details.funding.amount)],
+          ["Credit account", details.funding.maskedCreditAccountNumber],
+          ["Add money from", details.funding.sourceAccountName],
+          ["Source bank", details.funding.sourceBankName],
+          [
+            "Source account",
+            details.funding.maskedSourceAccountNumber,
+          ],
+          ["Remarks", details.funding.remarks ?? "-"],
+        ]
+      : details.requestType === "BENEFICIARY_CREATION"
       ? [
           ["Beneficiary name", details.beneficiary.beneficiaryName],
           ["Request reference", details.beneficiary.beneficiaryReference],
@@ -740,13 +771,14 @@ useEffect(() => {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-xl font-bold text-slate-950">
-            {isPayment
-              ? "Verify payment details"
-              : "Verify beneficiary details"}
+            {details.requestType === "ADD_BALANCE"
+              ? "Verify add balance request"
+              : isPayment
+                ? "Verify payment details"
+                : "Verify beneficiary details"}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Review the {isPayment ? "payment" : "beneficiary"} before
-            authorising.
+            Review the {subject} before authorising.
           </p>
         </div>
       </div>
@@ -768,7 +800,7 @@ useEffect(() => {
         <div className="flex flex-col justify-between gap-4">
           <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
             By selecting Authorise, you confirm that the displayed{" "}
-            {isPayment ? "payment" : "beneficiary"} details are correct.
+            {subject} details are correct.
           </p>
 
           <button
@@ -784,9 +816,11 @@ useEffect(() => {
             )}
             {isSubmitting
               ? "Authorising..."
-              : isPayment
-                ? "Authorise transaction"
-                : "Authorise beneficiary"}
+              : details.requestType === "ADD_BALANCE"
+                ? "Authorise add balance"
+                : isPayment
+                  ? "Authorise transaction"
+                  : "Authorise beneficiary"}
           </button>
         </div>
       </div>

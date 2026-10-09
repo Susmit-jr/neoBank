@@ -7,6 +7,7 @@ import {
   RefreshCw,
   ShieldCheck,
   UserRoundPlus,
+  WalletCards,
   X,
 } from "lucide-react";
 import {
@@ -23,6 +24,7 @@ import {
 } from "../../services/approvalService";
 import {
   createBankAuthorisationSession,
+  createFundingBankAuthorisationSession,
   createPaymentBankAuthorisationSession,
   getOpenBankSession,
 } from "../../services/authorisationService";
@@ -304,16 +306,14 @@ function ApprovalQueuePage() {
   setIsAuthorising(true);
 
   try {
-    const session =
+    const create =
       selectedItem.requestType === "PAYMENT"
-        ? await createPaymentBankAuthorisationSession(
-            selectedItem.requestId,
-            user.id,
-          )
-        : await createBankAuthorisationSession(
-            selectedItem.requestId,
-            user.id,
-          );
+        ? createPaymentBankAuthorisationSession
+        : selectedItem.requestType === "FUNDING"
+          ? createFundingBankAuthorisationSession
+          : createBankAuthorisationSession;
+
+    const session = await create(selectedItem.requestId, user.id);
 
     setBankSessionId(session.id);
 
@@ -433,6 +433,10 @@ function ApprovalQueuePage() {
       (item) => item.requestType === "PAYMENT",
     ).length;
 
+  const fundingRequestCount = approvalItems.filter(
+    (item) => item.requestType === "FUNDING",
+  ).length;
+
   return (
     <section className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -506,6 +510,12 @@ function ApprovalQueuePage() {
           label="Payment requests"
           value={String(paymentRequestCount)}
           type="PAYMENT"
+        />
+
+        <SummaryCard
+          label="Add balance requests"
+          value={String(fundingRequestCount)}
+          type="FUNDING"
         />
       </div>
 
@@ -589,8 +599,7 @@ function ApprovalQueuePage() {
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4">
-                      {item.requestType === "PAYMENT" &&
-                      item.amount !== undefined ? (
+                      {item.amount !== undefined ? (
                         <p className="text-sm font-bold text-slate-950">
                           {formatCurrency(item.amount)}
                         </p>
@@ -737,13 +746,14 @@ function ApprovalQueuePage() {
                   value={selectedItem.subtitle}
                 />
 
-                {selectedItem.requestType ===
-                  "PAYMENT" &&
-                  selectedItem.amount !==
-                    undefined && (
+                {selectedItem.amount !== undefined && (
                     <div className="mt-5">
                       <DetailItem
-                        label="Payment amount"
+                        label={
+                          selectedItem.requestType === "FUNDING"
+                            ? "Amount to add"
+                            : "Payment amount"
+                        }
                         value={formatCurrency(
                           selectedItem.amount,
                         )}
@@ -986,7 +996,7 @@ function ApprovalQueuePage() {
 type SummaryCardProps = {
   label: string;
   value: string;
-  type: "TOTAL" | "BENEFICIARY" | "PAYMENT";
+  type: "TOTAL" | "BENEFICIARY" | "PAYMENT" | "FUNDING";
 };
 
 function SummaryCard({
@@ -999,14 +1009,18 @@ function SummaryCard({
       ? UserRoundPlus
       : type === "PAYMENT"
         ? CircleDollarSign
-        : Clock3;
+        : type === "FUNDING"
+          ? WalletCards
+          : Clock3;
 
   const iconStyle =
     type === "BENEFICIARY"
       ? "bg-blue-50 text-blue-700"
       : type === "PAYMENT"
         ? "bg-emerald-50 text-emerald-700"
-        : "bg-amber-50 text-amber-700";
+        : type === "FUNDING"
+          ? "bg-violet-50 text-violet-700"
+          : "bg-amber-50 text-amber-700";
 
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1039,6 +1053,15 @@ function RequestTypeBadge({
       <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
         <CircleDollarSign size={14} />
         Payment
+      </span>
+    );
+  }
+
+  if (requestType === "FUNDING") {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-lg bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700">
+        <WalletCards size={14} />
+        Add balance
       </span>
     );
   }

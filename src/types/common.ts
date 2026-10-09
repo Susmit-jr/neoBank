@@ -1,3 +1,4 @@
+import type { FundingRequest } from "./funding";
 import type { ModeOfOperation } from "./approval";
 import type { MockBankUser } from "../mock-data/bankUsers";
 import type {
@@ -37,6 +38,7 @@ export type MockDatabase = {
   beneficiaries: Beneficiary[];
 
   payments: Payment[];
+  fundingRequests: FundingRequest[];
   paymentProcessingEvents: PaymentProcessingEvent[];
 
   approvalStages: ApprovalRequestStage[];

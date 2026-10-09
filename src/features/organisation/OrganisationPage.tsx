@@ -9,6 +9,7 @@ const operationLabels: Record<string, string> = {
   BENEFICIARY_MODIFICATION: "Changing a beneficiary",
   BENEFICIARY_DEACTIVATION: "Removing a beneficiary",
   PAYMENT: "Making a payment",
+  ADD_BALANCE: "Adding balance",
 };
 
 const roleGroups = [

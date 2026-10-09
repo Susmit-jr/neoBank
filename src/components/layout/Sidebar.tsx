@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Store,
   Users,
+  WalletCards,
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -113,6 +114,11 @@ const navigationByPortal: Record<
           "CHECKER_LEVEL_1",
           "CHECKER_LEVEL_2",
         ],
+    },
+    {
+      label: "Add balance",
+      path: "/merchant/add-balance",
+      icon: WalletCards,
     },
     {
       label: "Organisation",

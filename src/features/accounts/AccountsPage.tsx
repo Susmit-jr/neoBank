@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -210,6 +211,7 @@ function AccountsPage() {
           </p>
         </div>
 
+        <div className="flex gap-3">
         <button
           type="button"
           onClick={() =>
@@ -220,6 +222,14 @@ function AccountsPage() {
           <RefreshCw size={17} />
           Refresh
         </button>
+
+        <Link
+          to="/merchant/add-balance"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--brand-strong)]"
+        >
+          Add balance
+        </Link>
+        </div>
       </div>
 
       {error && (
