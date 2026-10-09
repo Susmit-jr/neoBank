@@ -155,13 +155,13 @@ function LoginPanel({ portal, onClose }: LoginPanelProps) {
         type="button"
         aria-label="Close sign in"
         onClick={onClose}
-        className={`absolute inset-0 bg-slate-950/50 transition-opacity duration-300 ${entered ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-slate-950/25 backdrop-blur-[3px] transition-opacity duration-300 ${entered ? "opacity-100" : "opacity-0"}`}
       />
 
       <aside
-        className={`absolute inset-y-0 right-0 flex w-full flex-col overflow-y-auto bg-[var(--surface-raised)] shadow-2xl transition-transform duration-300 md:w-1/2 md:min-w-[30rem] ${entered ? "translate-x-0" : "translate-x-full"}`}
+        className={`absolute right-4 top-20 flex max-h-[calc(100vh-6rem)] w-[calc(100%-2rem)] max-w-[26rem] flex-col overflow-y-auto rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] shadow-2xl shadow-slate-950/20 transition duration-300 sm:right-8 ${entered ? "translate-y-0 scale-100 opacity-100" : "-translate-y-3 scale-95 opacity-0"}`}
       >
-        <div className="flex items-center justify-between bg-[var(--sidebar-surface)] px-8 py-6 text-white">
+        <div className="flex items-center justify-between bg-[var(--brand-primary)] px-6 py-5 text-white">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-sm font-black text-[var(--brand-primary)]">
               {theme.brandMark}
@@ -186,7 +186,7 @@ function LoginPanel({ portal, onClose }: LoginPanelProps) {
           </button>
         </div>
 
-        <div className="mx-auto w-full max-w-md flex-1 px-8 py-10">
+        <div className="w-full flex-1 px-6 py-7">
           <h2 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text-primary)]">
             Sign in to {config.title}
           </h2>
@@ -195,7 +195,7 @@ function LoginPanel({ portal, onClose }: LoginPanelProps) {
             {config.description}
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {error && (
               <div
                 role="alert"
@@ -278,7 +278,7 @@ function LoginPanel({ portal, onClose }: LoginPanelProps) {
             </button>
           </form>
 
-          <div className="mt-8 rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-4">
+          <div className="mt-6 rounded-xl border border-[var(--border-subtle)] bg-[var(--brand-soft)] p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[var(--brand-primary)]">
               Demo credentials
             </p>

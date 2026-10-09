@@ -216,29 +216,29 @@ function Sidebar({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-white/10 bg-[var(--sidebar-surface)] text-white shadow-2xl shadow-slate-950/20 transition-[width,transform] duration-300 lg:translate-x-0 ${
-          isCollapsed ? "w-72 lg:w-24" : "w-72"
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--sidebar-surface)] text-[var(--text-primary)] shadow-xl shadow-slate-950/5 transition-[width,transform] duration-300 lg:translate-x-0 ${
+          isCollapsed ? "w-64 lg:w-24" : "w-64"
         } ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div
-          className={`flex h-20 items-center border-b border-white/10 ${
+          className={`flex h-20 items-center border-b border-[var(--border-subtle)] ${
             isCollapsed ? "justify-center px-3" : "justify-between px-5"
           }`}
         >
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--sidebar-mark)] text-sm font-black tracking-[-0.04em] text-[var(--sidebar-mark-text)] shadow-lg">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--sidebar-mark)] text-sm font-black tracking-[-0.04em] text-[var(--sidebar-mark-text)] shadow-sm">
               {theme.brandMark}
             </div>
 
             {!isCollapsed && (
               <div className="min-w-0">
-              <p className="truncate text-sm font-extrabold tracking-[0.06em] text-white">
+              <p className="truncate text-sm font-extrabold tracking-[0.06em] text-[var(--text-primary)]">
                 {theme.brand}
               </p>
 
-              <p className="mt-1 truncate text-xs font-medium text-white/55">
+              <p className="mt-1 truncate text-xs font-medium text-[var(--text-secondary)]">
                 {theme.workspace}
               </p>
             </div>
@@ -249,7 +249,7 @@ function Sidebar({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-white/55 transition hover:bg-white/10 hover:text-white lg:hidden"
+              className="rounded-lg p-2 text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] lg:hidden"
               aria-label="Close sidebar"
             >
               <X size={20} />
@@ -264,7 +264,7 @@ function Sidebar({
           }`}
         >
           {!isCollapsed && (
-            <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
+            <p className="mb-3 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--text-muted)]">
               Workspace
             </p>
           )}
@@ -286,8 +286,8 @@ function Sidebar({
                         : "gap-3 px-3"
                     } ${
                       isActive
-                        ? "bg-[var(--sidebar-active)] text-[var(--sidebar-active-text)] shadow-sm"
-                        : "text-white/65 hover:bg-white/10 hover:text-white"
+                        ? "bg-[var(--sidebar-active)] text-[var(--sidebar-active-text)]"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
                     }`
                   }
                 >
@@ -299,18 +299,18 @@ function Sidebar({
           </div>
         </nav>
 
-        <div className="border-t border-white/10 p-4">
+        <div className="border-t border-[var(--border-subtle)] p-4">
           {!isCollapsed && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-            <p className="truncate text-sm font-semibold text-white">
+          <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-4">
+            <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
               {user.fullName}
             </p>
 
-            <p className="mt-1 truncate text-xs text-white/45">
+            <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
               {user.email}
             </p>
 
-            <div className="mt-3 inline-flex rounded-md bg-white/10 px-2 py-1 text-[11px] font-semibold text-white/70">
+            <div className="mt-3 inline-flex rounded-md bg-[var(--brand-soft)] px-2 py-1 text-[11px] font-semibold text-[var(--brand-primary)]">
               {user.role.replaceAll("_", " ")}
             </div>
           </div>
@@ -319,7 +319,7 @@ function Sidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            className="mt-3 hidden w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-white/45 transition hover:bg-white/10 hover:text-white lg:flex"
+            className="mt-3 hidden w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium text-[var(--text-muted)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] lg:flex"
             aria-label={isCollapsed ? "Expand navigation" : "Collapse navigation"}
           >
             <ChevronLeft

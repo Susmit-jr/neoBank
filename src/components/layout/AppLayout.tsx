@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getPageMeta } from "../../design-system/portalTheme";
+import { processAllAuthorisedPayments } from "../../services/paymentProcessingService";
 import { useAuth } from "../../store/AuthContext";
 import type { PortalType } from "../../types/auth";
 import Header from "./Header";
@@ -24,6 +25,20 @@ function AppLayout({
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Authorised payments are sent to the bank wherever the user is in the portal.
+  useEffect(() => {
+    if (portal !== "MERCHANT") {
+      return;
+    }
+
+    const timer = window.setInterval(
+      () => void processAllAuthorisedPayments(),
+      2000,
+    );
+
+    return () => window.clearInterval(timer);
+  }, [portal]);
 
   if (!user) {
     return null;
@@ -64,7 +79,7 @@ function AppLayout({
 
       <div
         className={`min-h-screen transition-[padding] duration-300 ${
-          isSidebarCollapsed ? "lg:pl-24" : "lg:pl-72"
+          isSidebarCollapsed ? "lg:pl-24" : "lg:pl-64"
         }`}
       >
         <Header
