@@ -7,6 +7,7 @@ import {
   Landmark,
   LayoutDashboard,
   ListChecks,
+  ReceiptText,
   ShieldCheck,
   Store,
   Users,
@@ -116,6 +117,11 @@ const navigationByPortal: Record<
           "CHECKER_LEVEL_1",
           "CHECKER_LEVEL_2",
         ],
+    },
+    {
+      label: "Statements",
+      path: "/merchant/statements",
+      icon: ReceiptText,
     },
     {
       label: "Add balance",

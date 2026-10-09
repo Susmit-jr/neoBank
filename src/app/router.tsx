@@ -28,6 +28,7 @@ import ApplyPage from "../features/onboarding/ApplyPage";
 import TrackPage from "../features/onboarding/TrackPage";
 import ApplicationQueuePage from "../features/onboarding/ApplicationQueuePage";
 import ApplicationReviewPage from "../features/onboarding/ApplicationReviewPage";
+import StatementsPage from "../features/statements/StatementsPage";
 import AddBalancePage from "../features/funding/AddBalancePage";
 import CreateAddBalancePage from "../features/funding/CreateAddBalancePage";
 import OrganisationPage from "../features/organisation/OrganisationPage";
@@ -239,6 +240,10 @@ export const router = createBrowserRouter([
             <CreatePaymentPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "statements",
+        element: <StatementsPage />,
       },
       {
         path: "add-balance",

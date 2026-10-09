@@ -125,3 +125,20 @@ textarea:focus-visible {
 .overflow-x-auto > table td .min-w-56 {
   min-width: 0;
 }
+
+/* Statements and other pages print as clean documents. */
+@media print {
+  .no-print,
+  aside,
+  header.sticky {
+    display: none !important;
+  }
+
+  .portal-shell > div {
+    padding-left: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+}
